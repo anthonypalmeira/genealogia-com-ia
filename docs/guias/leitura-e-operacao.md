@@ -110,12 +110,7 @@ Nada fica só no chat, no navegador ou em `/tmp`: achado, explicação e próxim
 
 ### Fechar a conversa
 
-1. Salve o relatório e os recortes, e atualize o estado datado do elo.
-2. Marque cada achado como "já no relatório" ou não.
-3. Proponha as gravações no FamilySearch numa tabela, para aprovar com um "sim".
-4. Termine com os próximos passos em ordem e uma pergunta só.
-
-Pronto quando outra conversa consegue retomar o elo lendo só a pasta.
+Termine toda conversa de pesquisa, com ou sem skill, pelo [fechamento comum](../skills/fechamento.md).
 
 ### Na conta do usuário
 
