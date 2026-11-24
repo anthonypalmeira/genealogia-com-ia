@@ -131,6 +131,9 @@ impl Turn {
         cost_ms: u64,
         pause: Option<Duration>,
     ) -> Result<(), Error> {
+        // The clock is read in whole milliseconds, rounded down. Counting from
+        // the next one keeps a pause or a window from ending a moment early.
+        let now_ms = now_ms.saturating_add(1);
         self.state
             .window
             .retain(|spend| spend.leaves_window_ms(config) > now_ms);
