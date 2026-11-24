@@ -6,10 +6,10 @@ use std::path::Path;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::{Found, Hit, Query, RouteId, Title, ark, count, read, report};
+use super::{Query, RouteId, Title, ark, read};
 use crate::{
     cli::Config,
-    coverage::{Kind, Search},
+    coverage::{Found, Hit, Kind, Search, count, report},
     error::Error,
     familysearch::field,
     transport::Transport,

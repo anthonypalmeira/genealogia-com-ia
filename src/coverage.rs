@@ -13,6 +13,7 @@ use std::{
 use anyhow::Context;
 use chrono::{SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{
     cli::{Config, CoverageCommand},
@@ -78,6 +79,16 @@ pub(crate) enum Kind {
     CatalogItem,
     #[serde(rename = "waypoints")]
     Waypoints,
+    #[serde(rename = "digitarq-buscar")]
+    DigitarqSearch,
+    #[serde(rename = "digitarq-documento")]
+    DigitarqDocument,
+    #[serde(rename = "digitarq-imagens")]
+    DigitarqFiles,
+    #[serde(rename = "digitarq-baixar")]
+    DigitarqDownload,
+    #[serde(rename = "digitarq-oai")]
+    DigitarqOai,
 }
 
 /// The name the kind has in the log.
@@ -202,6 +213,7 @@ impl Coverage {
     ) -> Result<(), Error> {
         match error {
             Error::Blocked { .. }
+            | Error::Restricted { .. }
             | Error::Paused { .. }
             | Error::SessionExpired
             // Inside a search, only an answer of FamilySearch is an input
@@ -255,6 +267,76 @@ impl Coverage {
             })?;
         Ok(())
     }
+}
+
+/// How many items a list has, as the coverage log counts them.
+#[must_use = "the count is only useful when recorded"]
+pub(crate) fn count<T>(items: &[T]) -> u64 {
+    u64::try_from(items.len()).expect("a length fits in 64 bits")
+}
+
+/// One item a search found, as the output and the coverage log show it.
+pub(crate) struct Hit {
+    /// What identifies the item in the coverage log.
+    pub(crate) id: String,
+    /// The short line of the item.
+    pub(crate) line: String,
+    /// The item with `--json`.
+    pub(crate) json: Value,
+}
+
+/// What a search found.
+pub(crate) struct Found {
+    /// How many items there are in all, of which `hits` is one page.
+    pub(crate) total: u64,
+    /// A line about the whole result, printed before the items.
+    pub(crate) heading: Option<Hit>,
+    pub(crate) hits: Vec<Hit>,
+}
+
+/// Makes a search and reports it: records it in the coverage log, prints its
+/// items and tells the total. A block is recorded as pending access.
+pub(crate) fn report(
+    config: &Config,
+    log: &Path,
+    search: Search,
+    find: impl FnOnce() -> Result<Found, Error>,
+) -> Result<(), Error> {
+    let mut coverage = Coverage::open(log)?;
+    let found = match find() {
+        Ok(found) => found,
+        Err(error) => {
+            coverage.record_failure(search, Seen::default(), &error)?;
+            return Err(error);
+        }
+    };
+    let (offset, total) = (search.offset, found.total);
+    let seen = count(&found.hits);
+    let outcome = Outcome::answered(offset, seen, total);
+    // What has a heading exists, even with no items under it.
+    let outcome = if outcome == Outcome::Negative && found.heading.is_some() {
+        Outcome::Read
+    } else {
+        outcome
+    };
+    coverage.record(
+        search,
+        Seen {
+            total: Some(total),
+            count: seen,
+            items: found.hits.iter().map(|hit| hit.id.clone()).collect(),
+            file: None,
+        },
+        outcome,
+    )?;
+    for hit in found.heading.iter().chain(&found.hits) {
+        config.print(&hit.line, &hit.json)?;
+    }
+    eprintln!(
+        "garimpo: {seen} de {total} resultados, a partir do {offset}; busca registrada em {}",
+        log.display()
+    );
+    Ok(())
 }
 
 /// Runs a command of the `cobertura` group.

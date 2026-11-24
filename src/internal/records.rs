@@ -3,10 +3,10 @@
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::{Found, Hit, Query, ark, list, read, report, string_at};
+use super::{Query, ark, list, read, string_at};
 use crate::{
     cli::{Config, RecordsArgs},
-    coverage::{Kind, Search},
+    coverage::{Found, Hit, Kind, Search, report},
     error::Error,
     familysearch::field,
     transport::Transport,

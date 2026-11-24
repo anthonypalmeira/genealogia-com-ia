@@ -69,6 +69,25 @@ O que já está na árvore é hipótese. Exemplos vistos: título de fonte que e
 
 A resolução do `dist.jpg` é a maior guardada **daquele filme** e varia de cerca de 1.400 px a 4.300 px. Pouca resolução não é motivo para parar: baixe o original, corte em metades e amplie.
 
+## Imagens com o `garimpo`
+
+O grupo `garimpo imagens` trata um filme pelo grupo de imagens (o número que sai de `garimpo busca catalogo-item`) e pelo número de cada imagem, de 1 ao total. A ajuda de cada comando diz o que cada linha traz.
+
+| Comando | Uso |
+|---|---|
+| `garimpo imagens listar <grupo>` | Quantas imagens o filme tem e quais já estão na pasta. Um filme restrito sai com 4 |
+| `garimpo imagens miniaturas <grupo>` | As miniaturas, para a triagem. `--de` e `--ate` limitam a faixa |
+| `garimpo imagens baixar <grupo>` | A resolução original, como `<grupo>_<número>.jpg`, com `manifesto.jsonl` (hash, tamanho, dimensões) e retomada: repetir o comando pula o que confere com o manifesto. A imagem restrita fica como `pendente-de-acesso` |
+| `garimpo imagens folha <arquivos> --saida <folha>` | Folha de contato, para triar muitas miniaturas numa leitura só |
+| `garimpo imagens recortar <arquivo>` | Pedaços que cabem no limite de leitura do modelo (2.576 px), com `--regiao` e `--ampliar` |
+| `garimpo imagens contraste <arquivo>` | Contraste global, em tons de cinza |
+
+**Ritmo.** Os pedidos ao FamilySearch saem um por vez, pelo mesmo regulador das outras rotas, e cada imagem em resolução original segura o pedido seguinte por 1,5 s (`GARIMPO_INTERVALO_IMAGENS_MS`): cerca de 40 imagens por minuto. Só as transferências do armazenamento, que já não são do FamilySearch, correm em paralelo (`--paralelo`). A sessão vai só no pedido ao FamilySearch, nunca no endereço assinado do armazenamento. As miniaturas contam no teto da sessão como qualquer pedido.
+
+**Restrito não é bloqueio.** O armazenamento recusa um filme ou uma imagem com um 403 que nomeia o artefato ("Access to artifact denied"): a imagem fica no manifesto como `pendente-de-acesso` e o download segue. Qualquer outro 403 (a página de um firewall, por exemplo) e o 429 repetido são bloqueio: o comando para na hora, nenhuma outra imagem é pedida, e repetir o comando mais tarde retoma. Um endereço assinado recusado ou uma transferência cortada também param o comando, sem nada gravado: a retomada pede a imagem de novo. Duas rodadas na mesma pasta se revezam, para o manifesto não perder linhas.
+
+**Endereços.** O armazenamento responde em `…/das/v2/dgs:<grupo>` (com `childCount`, o número de imagens), `…/dgs:<grupo>_<número com 5 algarismos>/dist.jpg` e `…/thumb_p200.jpg`. O grupo leva os nove algarismos, com os zeros. Vêm das notas do `ianderso/familysearch-mcp`; a URL-base troca-se em `GARIMPO_FS_IMAGENS`.
+
 ## Buscas com o `garimpo`
 
 O grupo `garimpo busca` usa as rotas internas descritas acima: registros indexados, texto completo, catálogo e *waypoints*. A ajuda de cada comando (`garimpo busca <comando> --help`) diz o que cada linha da saída traz.

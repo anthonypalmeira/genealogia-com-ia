@@ -12,7 +12,10 @@ mod server;
 
 mod bridge;
 mod coverage;
+mod diagram;
+mod digitarq;
 mod group;
+mod images;
 mod pacing;
 mod read;
 mod search;

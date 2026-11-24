@@ -48,6 +48,11 @@ jobs:
             echo "::error::recorded responses must not hold a token or a living person"
             exit 1
           fi
+      # The SVG test renders with Pele, which the renderer's folder pins.
+      - run: bun install --frozen-lockfile
+        working-directory: svg
+      - run: bun run typecheck
+        working-directory: svg
       - run: cargo nextest run --workspace --all-features --locked
       - run: cargo test --workspace --doc --locked
       - run: cargo build --release --locked
@@ -75,5 +80,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-llvm-cov
+      - run: bun install --frozen-lockfile
+        working-directory: svg
       # Report only: there is no coverage target.
       - run: cargo llvm-cov nextest --workspace --all-features --locked

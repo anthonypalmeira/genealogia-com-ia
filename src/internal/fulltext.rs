@@ -13,10 +13,10 @@ use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use super::{Found, Hit, Query, ark, count, read, report};
+use super::{Query, ark, read};
 use crate::{
     cli::{Config, FullTextArgs},
-    coverage::{Coverage, Kind, Outcome, Search, Seen},
+    coverage::{Coverage, Found, Hit, Kind, Outcome, Search, Seen, count, report},
     error::Error,
     familysearch::field,
     text::{Searchable, unaccent},

@@ -3,7 +3,10 @@
 //! routes, inside the user's logged tab through the browser bridge.
 
 use std::{
-    cell::OnceCell,
+    fs::File,
+    io,
+    path::Path,
+    sync::OnceLock,
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -15,7 +18,7 @@ use ureq::{Agent, config::Config as HttpConfig};
 use crate::{
     bridge,
     cli::Config,
-    error::Error,
+    error::{Error, Service},
     pacing::{Turn, millis},
     session::{self, Token},
 };
@@ -39,12 +42,16 @@ enum Call<'a> {
     /// A GET to the website, made inside the logged tab while the browser
     /// bridge is open.
     SiteGet,
+    /// A GET to the image storage, answered in JSON.
+    StorageGet,
+    /// A GET to the image storage for an image, whose bytes go into the file.
+    Download(&'a Path),
 }
 
 impl Call<'_> {
     fn method(self) -> &'static str {
         match self {
-            Self::Get | Self::SiteGet => "GET",
+            Self::Get | Self::SiteGet | Self::StorageGet | Self::Download(_) => "GET",
             Self::Post(_) => "POST",
         }
     }
@@ -99,7 +106,7 @@ pub(crate) struct Transport<'a> {
     config: &'a Config,
     agent: Agent,
     /// The session of the first request. One command never spans two sessions.
-    token: OnceCell<Token>,
+    token: OnceLock<Token>,
 }
 
 impl<'a> Transport<'a> {
@@ -107,7 +114,7 @@ impl<'a> Transport<'a> {
         Self {
             config,
             agent: agent(),
-            token: OnceCell::new(),
+            token: OnceLock::new(),
         }
     }
 
@@ -125,6 +132,50 @@ impl<'a> Transport<'a> {
         self.send(Call::SiteGet, path)
     }
 
+    /// A GET to the image storage that answers in JSON.
+    pub(crate) fn get_storage(&self, path: &str) -> Result<Response, Error> {
+        self.send(Call::StorageGet, path)
+    }
+
+    /// Asks the image storage for an image, at the account's pace like any
+    /// other request. A thumbnail comes in the answer and goes into `into`. A
+    /// full image is answered with a redirect to a signed address of the
+    /// storage, which is returned for [`Self::transfer`]: that one request
+    /// goes outside the account's turn, so the transfers of several threads
+    /// overlap while the requests to FamilySearch stay one at a time.
+    pub(crate) fn ask_image(&self, path: &str, into: &Path) -> Result<Option<String>, Error> {
+        Ok(self.send(Call::Download(into), path)?.location)
+    }
+
+    /// Stores what the signed address of a full image holds in `into`. The
+    /// signature is the credential, so the session does not go along, and
+    /// the address never goes into an error message.
+    pub(crate) fn transfer(&self, signed: &str, into: &Path) -> Result<(), Error> {
+        let mut response = self.agent.get(signed).call().map_err(|error| {
+            let cause = match error {
+                ureq::Error::Timeout(_) => "o tempo esgotou".to_owned(),
+                ureq::Error::Io(error) => error.to_string(),
+                _ => "a conexão não se completou".to_owned(),
+            };
+            anyhow!("a transferência da imagem falhou: {cause}")
+        })?;
+        let status = response.status().as_u16();
+        if !(200..=299).contains(&status) {
+            // Not a restriction: FamilySearch had already granted the image.
+            // A signed address is refused when it expires, and asking again
+            // gives another one.
+            return Err(anyhow!(
+                "o armazenamento de imagens respondeu {status} ao endereço assinado; repita o \
+                 comando para pedir outro"
+            )
+            .into());
+        }
+        File::create(into)
+            .and_then(|mut file| io::copy(&mut response.body_mut().as_reader(), &mut file))
+            .with_context(|| format!("não consegui gravar {}", into.display()))?;
+        Ok(())
+    }
+
     /// Makes one request at the account's pace: waits for the turn, the pause
     /// and the window budget, and repeats after the pause when the server
     /// answers 429 (a refusal before processing, so repeating a POST duplicates
@@ -136,11 +187,16 @@ impl<'a> Transport<'a> {
             let mut turn = Turn::take(self.config)?;
             let way = match call {
                 Call::SiteGet if bridge::is_open(&self.config.dir) => Way::Tab,
-                Call::Get | Call::Post(_) | Call::SiteGet => Way::Direct(self.token()?),
+                Call::Get
+                | Call::Post(_)
+                | Call::SiteGet
+                | Call::StorageGet
+                | Call::Download(_) => Way::Direct(self.token()?),
             };
             // Only a 429 leads to another attempt. When that attempt cannot be
             // made, the block is still what happened to the request.
             let blocked = || Error::Blocked {
+                service: Service::FamilySearch,
                 status: 429,
                 path: path.to_owned(),
             };
@@ -196,11 +252,19 @@ impl<'a> Transport<'a> {
             // The server asks for a pause with `Retry-After`, in seconds. After a
             // 429 the pause is long, even when the server asks for little.
             let asked = retry_after_s.map(Duration::from_secs);
-            let pause = if status == 429 {
-                let minimum = Duration::from_secs(self.config.pause_429_s);
-                Some(asked.unwrap_or_default().max(minimum))
-            } else {
-                asked
+            let pause = match (status, call) {
+                (429, _) => {
+                    let minimum = Duration::from_secs(self.config.pause_429_s);
+                    Some(asked.unwrap_or_default().max(minimum))
+                }
+                // A redirect to the storage is a full image on its way, and
+                // full images are what gets an account paused: the next
+                // request waits the interval.
+                (300..=399, Call::Download(_)) => {
+                    let interval = Duration::from_millis(self.config.image_interval_ms);
+                    Some(asked.unwrap_or_default().max(interval))
+                }
+                _ => asked,
             };
             // The count and the pause are saved from the headers alone, before any
             // body is read, so a body that stalls or breaks cannot lose them. The
@@ -218,9 +282,17 @@ impl<'a> Transport<'a> {
                             // Only what a GET read is used; a POST is told by
                             // its status and `Location`.
                             Call::Post(_) => String::new(),
-                            Call::Get | Call::SiteGet => body
-                                .read_to_string()
-                                .map_err(|error| unread(&error.to_string()))?,
+                            Call::Get | Call::SiteGet | Call::StorageGet => {
+                                body.read_to_string()
+                                    .map_err(|error| unread(&error.to_string()))?
+                            }
+                            // A thumbnail comes in the answer itself.
+                            Call::Download(into) => {
+                                File::create(into)
+                                    .and_then(|mut file| io::copy(&mut body.as_reader(), &mut file))
+                                    .map_err(|error| unread(&error.to_string()))?;
+                                String::new()
+                            }
                         },
                     };
                     return Ok(Response {
@@ -232,18 +304,28 @@ impl<'a> Transport<'a> {
                 // the regulator.
                 300..=399 => {
                     let to = location.as_deref().unwrap_or("outro endereço");
-                    return Err(match call {
+                    return match call {
+                        // The one redirect that is followed, by `download`,
+                        // once this request is counted.
+                        Call::Download(_) if location.is_some() => Ok(Response {
+                            body: String::new(),
+                            location,
+                        }),
                         // A merged person answers with one.
-                        Call::Get | Call::Post(_) => Error::Input(format!(
+                        Call::Get | Call::Post(_) => Err(Error::Input(format!(
                             "{path} mudou para {to} ({status}); a pessoa pode ter sido \
                              fundida em outra: repita com o id novo"
-                        )),
-                        Call::SiteGet => anyhow!(
+                        ))),
+                        Call::SiteGet => Err(anyhow!(
                             "o site redirecionou {path} para {to} ({status}); se a aba ou a \
                              sessão não está logada, peça o login ao usuário"
                         )
-                        .into(),
-                    });
+                        .into()),
+                        Call::StorageGet | Call::Download(_) => Err(anyhow!(
+                            "o armazenamento de imagens redirecionou {path} ({status})"
+                        )
+                        .into()),
+                    };
                 }
                 401 => {
                     match way {
@@ -257,9 +339,26 @@ impl<'a> Transport<'a> {
                     return Err(Error::SessionExpired);
                 }
                 403 => {
-                    return Err(Error::Blocked {
-                        status,
-                        path: path.to_owned(),
+                    // The image storage refuses one film or one image to the
+                    // account by saying so ("Access to artifact denied").
+                    // Any other 403 is a block.
+                    let about_artifact = matches!(call, Call::StorageGet | Call::Download(_))
+                        && match body {
+                            Body::Unread(mut body) => body.read_to_string().is_ok_and(|text| {
+                                text.to_lowercase().contains("access to artifact denied")
+                            }),
+                            Body::Read(_) | Body::Lost => false,
+                        };
+                    return Err(if about_artifact {
+                        Error::Restricted {
+                            what: path.to_owned(),
+                        }
+                    } else {
+                        Error::Blocked {
+                            service: Service::FamilySearch,
+                            status,
+                            path: path.to_owned(),
+                        }
                     });
                 }
                 404 | 410 => {
@@ -279,6 +378,7 @@ impl<'a> Transport<'a> {
             }
         }
         Err(Error::Blocked {
+            service: Service::FamilySearch,
             status: 429,
             path: path.to_owned(),
         })
@@ -302,11 +402,13 @@ impl<'a> Transport<'a> {
         let (base, accept) = match call {
             Call::Get | Call::Post(_) => (&self.config.fs_api, MEDIA_TYPE),
             Call::SiteGet => (&self.config.fs_site, SITE_MEDIA_TYPE),
+            Call::StorageGet => (&self.config.fs_images, SITE_MEDIA_TYPE),
+            Call::Download(_) => (&self.config.fs_images, "image/*"),
         };
         let url = format!("{base}{path}");
         let authorization = format!("Bearer {}", token.as_str());
         let sent = match call {
-            Call::Get | Call::SiteGet => self
+            Call::Get | Call::SiteGet | Call::StorageGet | Call::Download(_) => self
                 .agent
                 .get(&url)
                 .header("Authorization", &authorization)

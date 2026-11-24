@@ -1,7 +1,25 @@
 //! The errors an agent has to tell apart, each with its own exit code and the
 //! next step to take. Messages are in Portuguese, like the rest of the CLI.
 
+use std::fmt;
+
 use crate::familysearch::{PersonId, SourceId};
+
+/// Who answered a request.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Service {
+    FamilySearch,
+    Digitarq,
+}
+
+impl fmt::Display for Service {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            Self::FamilySearch => "FamilySearch",
+            Self::Digitarq => "digitarq",
+        })
+    }
+}
 
 /// A failed `garimpo` command.
 #[derive(Debug, thiserror::Error)]
@@ -15,9 +33,17 @@ pub enum Error {
     /// FamilySearch rejected the held session (401).
     #[error("login necessário: a sessão do FamilySearch expirou")]
     SessionExpired,
-    /// FamilySearch blocked the request: 403, or 429 even after the pauses.
-    #[error("bloqueio: o FamilySearch respondeu {status} em {path}")]
-    Blocked { status: u16, path: String },
+    /// The service blocked the request: 403, or 429 even after the pauses.
+    #[error("bloqueio: o {service} respondeu {status} em {path}")]
+    Blocked {
+        service: Service,
+        status: u16,
+        path: String,
+    },
+    /// The image storage refuses one film or one image to this account. Not
+    /// a block of the account, and not a missing image.
+    #[error("acesso restrito: {what} foi recusado a esta conta (403)")]
+    Restricted { what: String },
     /// FamilySearch asked for a pause longer than the command accepts to wait.
     #[error("bloqueio: o FamilySearch pediu uma pausa e ainda faltam {seconds} s")]
     Paused { seconds: u64 },
@@ -53,7 +79,7 @@ impl Error {
             Self::Other(_) => 1,
             Self::Input(_) => 2,
             Self::SessionMissing | Self::SessionExpired => 3,
-            Self::Blocked { .. } | Self::Paused { .. } => 4,
+            Self::Blocked { .. } | Self::Restricted { .. } | Self::Paused { .. } => 4,
             Self::SessionCap { .. } => 5,
             Self::WriteNotAuthorized => 6,
             Self::BridgeDetached => 7,
@@ -74,11 +100,24 @@ impl Error {
                  trecho de `garimpo ponte abrir`) e rode de novo"
                     .into()
             }
-            Self::Blocked { .. } => {
-                "um 403 no grupo `busca` sem a ponte aberta é o site recusando fora do \
+            Self::Blocked {
+                service: Service::Digitarq,
+                ..
+            } => "pare de chamar o digitarq por agora e avise o usuário; bloqueio não significa \
+                  que o dado não existe"
+                .into(),
+            Self::Blocked {
+                service: Service::FamilySearch,
+                ..
+            } => "um 403 no grupo `busca` sem a ponte aberta é o site recusando fora do \
                  navegador: abra a ponte com `garimpo ponte abrir` e rode de novo. Em \
                  qualquer outro caso, pare de chamar o FamilySearch por agora e avise o \
                  usuário; bloqueio não significa que o dado não existe"
+                .into(),
+            Self::Restricted { .. } => {
+                "anote como pendente de acesso e siga com o resto, sem pedir de novo: só o \
+                 usuário consegue esse acesso (por exemplo, num centro do FamilySearch); \
+                 restrito não significa que o dado não existe"
                     .into()
             }
             Self::Paused { seconds } => format!(
