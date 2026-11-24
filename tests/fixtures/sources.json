@@ -1,0 +1,65 @@
+{
+  "persons": [
+    {
+      "id": "SINT-001",
+      "links": {
+        "person": {
+          "href": "https://api.familysearch.org/platform/tree/persons/SINT-001?flag=fsh"
+        }
+      },
+      "sources": [
+        {
+          "id": "SINT-SR1",
+          "attribution": {
+            "contributor": {
+              "resource": "https://api.familysearch.org/platform/users/agents/SINT-AGT",
+              "resourceId": "SINT-AGT"
+            },
+            "modified": 1543677067759,
+            "changeMessage": "Batismo com os nomes dos pais."
+          },
+          "description": "#SINT-F01",
+          "tags": [
+            {
+              "resource": "http://gedcomx.org/Birth"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "sourceDescriptions": [
+    {
+      "id": "SINT-F01",
+      "about": "https://exemplo.invalid/acervo/batismos/livro-3/folha-12",
+      "attribution": {
+        "contributor": {
+          "resource": "https://api.familysearch.org/platform/users/agents/SINT-AGT",
+          "resourceId": "SINT-AGT"
+        },
+        "modified": 1543677067759,
+        "changeMessage": "Batismo com os nomes dos pais."
+      },
+      "links": {
+        "description": {
+          "href": "https://api.familysearch.org/platform/sources/descriptions/SINT-F01?flag=fsh"
+        }
+      },
+      "citations": [
+        {
+          "value": "Paróquia de Vila Exemplo, Batismos, livro 3, folha 12."
+        }
+      ],
+      "titles": [
+        {
+          "value": "Batismo de Joaquim, 1820"
+        }
+      ],
+      "notes": [
+        {
+          "text": "Aos três de abril de mil oitocentos e vinte batizei a Joaquim, filho de Manoel e de Maria."
+        }
+      ]
+    }
+  ]
+}

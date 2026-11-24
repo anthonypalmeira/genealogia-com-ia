@@ -1,0 +1,5 @@
+[tools]
+"aqua:EmbarkStudios/cargo-deny" = "0.22.0"
+"aqua:nextest-rs/nextest/cargo-nextest" = "0.9.152"
+"aqua:rustsec/rustsec/cargo-audit" = "0.23.0"
+"ubi:bnjbvr/cargo-machete" = "0.10.1"
