@@ -1,0 +1,16 @@
+{
+  "titulo": "Belarmino Vidigal é filho de Honorato Vidigal: prova pelo irmão Zeferino",
+  "pessoas": [
+    {"id": "belarmino", "nome": "Belarmino Vidigal", "nascimento": 1820},
+    {"id": "honorato", "nome": "Honorato Vidigal", "nascimento": 1790},
+    {"id": "zeferino", "nome": "Zeferino Vidigal", "nascimento": 1822, "morte": 1870}
+  ],
+  "elos": [
+    {"de": "belarmino", "para": "honorato", "nota": "A", "identidade": "B", "papel": "direto",
+     "documento": "Triângulo: testamento e casamento de Zeferino [V]"},
+    {"de": "zeferino", "para": "honorato", "nota": "A", "papel": "colateral",
+     "documento": "Casamento de Zeferino, 1850: filho legítimo de Honorato Vidigal [V]"},
+    {"de": "zeferino", "para": "belarmino", "relacao": "irmão de pai e mãe", "nota": "A", "papel": "colateral",
+     "documento": "Testamento de Zeferino, 1870: meu irmão de pai e mãe Belarmino Vidigal [V]"}
+  ]
+}

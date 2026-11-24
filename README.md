@@ -9,7 +9,7 @@ Quem pesquisa genealogia com um agente de IA perde tempo com o que não é genea
 - **Instruções para agentes** ([AGENTS.md](AGENTS.md)): o mapa do kit e as regras que valem sempre. Claude e Codex leem sozinhos.
 - **Guias de referência** ([docs/guias/](docs/guias/)): [estratégias](docs/guias/estrategias.md) por tipo de problema, [fontes](docs/guias/fontes.md) por região, o [FamilySearch](docs/guias/familysearch.md) em detalhe, a [régua de prova e pistas](docs/guias/regua-de-prova.md), [leitura de imagem e operação](docs/guias/leitura-e-operacao.md) e [termos e riscos](docs/guias/termos-e-riscos.md).
 - **A CLI `garimpo`**, em Rust, feita para o agente usar: sessão e ritmo do FamilySearch, árvore, buscas com registro de cobertura, imagens com manifesto e retomada, o digitarq e o desenho de linhagens. `garimpo --help` explica cada grupo de comandos.
-- **Skills de agente** ([skills/](skills/)): em construção.
+- **Skills de agente** ([skills/](skills/)): uma por situação, da nota de uma linhagem ao pedido em papel.
 
 O kit traz ferramentas, método e modelos. A pesquisa de cada família fica na pasta de quem pesquisa, fora deste repositório.
 
