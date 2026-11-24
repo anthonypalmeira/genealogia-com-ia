@@ -2,7 +2,7 @@
 
 A pesquisa de cada usuário fica numa pasta dele, fora deste repositório. Este modelo diz o que a pasta guarda e onde, para que qualquer conversa retome um elo lendo só a pasta. Os outros arquivos desta pasta são os modelos a copiar.
 
-No kit, a pasta é `pesquisa/`: um link na raiz do repositório, ignorado pelo git, para a pasta do usuário.
+Para as skills, a pasta é `pesquisa/`: um link, na pasta em que a conversa roda, para a pasta do usuário. No clone do kit, o git ignora o link.
 
 ## O que a pasta guarda
 
@@ -26,8 +26,8 @@ A cobertura de um elo tem duas partes: as buscas do `garimpo`, que `garimpo cobe
 
 ## Montar a pasta
 
-1. Pergunte ao usuário onde a pasta fica, fora do kit, e crie-a. Na raiz do kit, rode `ln -s <caminho da pasta> pesquisa`.
-2. Copie [perfil.md](perfil.md) e [linhagens.md](linhagens.md) para a pasta.
+1. Pergunte ao usuário onde a pasta fica, fora do kit, e crie-a. Na pasta em que a conversa roda, rode `ln -s <caminho da pasta> pesquisa`; se a conversa já roda dentro da pasta da pesquisa, `ln -s . pesquisa`.
+2. Copie para a pasta o que ela ainda não tem de [perfil.md](perfil.md) e [linhagens.md](linhagens.md).
 3. Preencha o perfil com o que o pedido já disse e pergunte o resto numa mensagem só.
 
 Pronto quando `pesquisa/perfil.md` não tem mais nenhum campo entre `<` e `>`.

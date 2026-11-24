@@ -9,9 +9,11 @@ Diz se a pessoa de partida chega a algum ancestral-alvo e por onde. A árvore s�
 
 **Argumentos:** o alvo, o limite e a pessoa de partida, que por padrão é a pessoa raiz do perfil.
 
+Os links deste arquivo partem da pasta real desta skill: se ela foi aberta por um link, como `.claude/skills` ou `.agents/skills`, resolva o caminho real dela antes de seguir o primeiro. Os roteiros dos passos 4 e 5 estão em `scripts/`, na pasta desta skill: nos comandos, `<skill>` é o caminho dela.
+
 ## Passos
 
-1. **Abra** pela [abertura comum](../../../docs/skills/abertura.md).
+1. **Abra** pela [abertura comum](../../docs/skills/abertura.md).
 2. **Fixe o alvo e o limite.**
    - O alvo é uma **lista** que o usuário fornece (nomes ou IDs, na mensagem ou num arquivo) ou um **critério**: um fato, um lugar ou um selo de retrato.
    - O limite é um número de gerações ou um ano de corte. Sem limite no pedido, o corte é o ano de nascimento do alvo mais antigo; sem data nenhuma, 8 gerações.
@@ -33,7 +35,7 @@ Diz se a pessoa de partida chega a algum ancestral-alvo e por onde. A árvore s�
 4. **Ache os alvos na varredura.** A tabela das pessoas, uma por linha, com a geração, os nomes e os fatos que a árvore dá:
 
    ```sh
-   jq -r -f .claude/skills/caminhos/people.jq pesquisa/varreduras/ascendencia-<ID>.jsonl
+   jq -r -f <skill>/scripts/people.jq pesquisa/varreduras/ascendencia-<ID>.jsonl
    ```
 
    - **Limite:** valem as pessoas da geração 1 em diante, até a geração N ou nascidas do ano de corte em diante, mesmo que o arquivo vá além. Com ano de corte, a pessoa sem data de nascimento entra com a marca "sem data".
@@ -45,7 +47,7 @@ Diz se a pessoa de partida chega a algum ancestral-alvo e por onde. A árvore s�
 5. **Liste os caminhos**, com as datas impossíveis marcadas:
 
    ```sh
-   jq -rn -f .claude/skills/caminhos/paths.jq --arg alvos "<ID>,<ID>" pesquisa/varreduras/ascendencia-<ID>.jsonl
+   jq -rn -f <skill>/scripts/paths.jq --arg alvos "<ID>,<ID>" pesquisa/varreduras/ascendencia-<ID>.jsonl
    ```
 
    Cada linha é um elo: número do caminho, alvo, filho, pai ou mãe e o aviso. O aviso marca o elo em que os anos da árvore não fecham. Um elo assim tem a data ou o parentesco errado: continua no caminho, com a marca.
@@ -61,4 +63,4 @@ Diz se a pessoa de partida chega a algum ancestral-alvo e por onde. A árvore s�
    Um alvo que não foi achado "não aparece na árvore até o limite": a árvore é incompleta, e a resposta diz só isso. A resposta cita sempre os ramos por verificar.
 
    Pronto quando a tabela tem uma linha por caminho e cada alvo da lista tem resposta.
-8. **Feche** pelo [fechamento comum](../../../docs/skills/fechamento.md).
+8. **Feche** pelo [fechamento comum](../../docs/skills/fechamento.md).
