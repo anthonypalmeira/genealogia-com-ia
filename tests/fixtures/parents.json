@@ -1,0 +1,232 @@
+{
+  "persons": [
+    {
+      "id": "SINT-002",
+      "living": false,
+      "gender": {
+        "type": "http://gedcomx.org/Male"
+      },
+      "links": {
+        "person": {
+          "href": "https://api.familysearch.org/platform/tree/persons/SINT-002?flag=fsh"
+        }
+      },
+      "identifiers": {
+        "http://gedcomx.org/Persistent": [
+          "https://familysearch.org/ark:/61903/4:1:SINT-002"
+        ]
+      },
+      "names": [
+        {
+          "id": "SINT-002.nome",
+          "type": "http://gedcomx.org/BirthName",
+          "preferred": true,
+          "nameForms": [
+            {
+              "fullText": "Manoel Fictício da Silva",
+              "parts": [
+                {
+                  "type": "http://gedcomx.org/Given",
+                  "value": "Manoel"
+                },
+                {
+                  "type": "http://gedcomx.org/Surname",
+                  "value": "Fictício da Silva"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "SINT-002.nasc",
+          "attribution": {
+            "contributor": {
+              "resource": "https://api.familysearch.org/platform/users/agents/SINT-AGT",
+              "resourceId": "SINT-AGT"
+            },
+            "modified": 1543677067759
+          },
+          "type": "http://gedcomx.org/Birth",
+          "date": {
+            "original": "1790",
+            "formal": "+1790"
+          },
+          "place": {
+            "original": "Vila Exemplo, Minas Gerais, Brasil",
+            "normalized": [
+              {
+                "lang": "pt",
+                "value": "Vila Exemplo, Minas Gerais, Brasil"
+              }
+            ]
+          }
+        },
+        {
+          "id": "SINT-002.morte",
+          "type": "http://gedcomx.org/Death",
+          "date": {
+            "original": "1850",
+            "formal": "+1850"
+          },
+          "place": {
+            "original": "Vila Exemplo, Minas Gerais, Brasil"
+          }
+        }
+      ],
+      "display": {
+        "name": "Manoel Fictício da Silva",
+        "gender": "Male",
+        "lifespan": "1820-1890"
+      }
+    },
+    {
+      "id": "SINT-003",
+      "living": false,
+      "gender": {
+        "type": "http://gedcomx.org/Female"
+      },
+      "links": {
+        "person": {
+          "href": "https://api.familysearch.org/platform/tree/persons/SINT-003?flag=fsh"
+        }
+      },
+      "identifiers": {
+        "http://gedcomx.org/Persistent": [
+          "https://familysearch.org/ark:/61903/4:1:SINT-003"
+        ]
+      },
+      "names": [
+        {
+          "id": "SINT-003.nome",
+          "type": "http://gedcomx.org/BirthName",
+          "preferred": true,
+          "nameForms": [
+            {
+              "fullText": "Maria Inventada de Jesus",
+              "parts": [
+                {
+                  "type": "http://gedcomx.org/Given",
+                  "value": "Maria"
+                },
+                {
+                  "type": "http://gedcomx.org/Surname",
+                  "value": "Inventada de Jesus"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "SINT-003.nasc",
+          "attribution": {
+            "contributor": {
+              "resource": "https://api.familysearch.org/platform/users/agents/SINT-AGT",
+              "resourceId": "SINT-AGT"
+            },
+            "modified": 1543677067759
+          },
+          "type": "http://gedcomx.org/Birth",
+          "date": {
+            "original": "1795",
+            "formal": "+1795"
+          },
+          "place": {
+            "original": "Vila Exemplo, Minas Gerais, Brasil",
+            "normalized": [
+              {
+                "lang": "pt",
+                "value": "Vila Exemplo, Minas Gerais, Brasil"
+              }
+            ]
+          }
+        }
+      ],
+      "display": {
+        "name": "Maria Inventada de Jesus",
+        "gender": "Female",
+        "lifespan": "1820-1890"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "SINT-CAS",
+      "type": "http://gedcomx.org/Couple",
+      "person1": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-002",
+        "resourceId": "SINT-002"
+      },
+      "person2": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-003",
+        "resourceId": "SINT-003"
+      },
+      "facts": [
+        {
+          "type": "http://gedcomx.org/Marriage",
+          "date": {
+            "original": "1818",
+            "formal": "+1818"
+          },
+          "place": {
+            "original": "Vila Exemplo, Minas Gerais, Brasil"
+          }
+        }
+      ]
+    },
+    {
+      "id": "P1SINT-REL",
+      "type": "http://gedcomx.org/ParentChild",
+      "person1": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-002",
+        "resourceId": "SINT-002"
+      },
+      "person2": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-001",
+        "resourceId": "SINT-001"
+      }
+    },
+    {
+      "id": "P2SINT-REL",
+      "type": "http://gedcomx.org/ParentChild",
+      "person1": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-003",
+        "resourceId": "SINT-003"
+      },
+      "person2": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-001",
+        "resourceId": "SINT-001"
+      }
+    }
+  ],
+  "childAndParentsRelationships": [
+    {
+      "id": "SINT-REL",
+      "parent1": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-002",
+        "resourceId": "SINT-002"
+      },
+      "parent2": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-003",
+        "resourceId": "SINT-003"
+      },
+      "child": {
+        "resource": "https://api.familysearch.org/platform/tree/persons/SINT-001",
+        "resourceId": "SINT-001"
+      },
+      "parent1Facts": [
+        {
+          "type": "http://gedcomx.org/BiologicalParent"
+        }
+      ],
+      "parent2Facts": [
+        {
+          "type": "http://gedcomx.org/BiologicalParent"
+        }
+      ]
+    }
+  ]
+}

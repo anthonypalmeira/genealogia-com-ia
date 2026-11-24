@@ -1,0 +1,85 @@
+{
+  "persons": [
+    {
+      "id": "SINT-001",
+      "living": false,
+      "gender": {
+        "type": "http://gedcomx.org/Male"
+      },
+      "links": {
+        "person": {
+          "href": "https://api.familysearch.org/platform/tree/persons/SINT-001?flag=fsh"
+        }
+      },
+      "identifiers": {
+        "http://gedcomx.org/Persistent": [
+          "https://familysearch.org/ark:/61903/4:1:SINT-001"
+        ]
+      },
+      "names": [
+        {
+          "id": "SINT-001.nome",
+          "type": "http://gedcomx.org/BirthName",
+          "preferred": true,
+          "nameForms": [
+            {
+              "fullText": "Joaquim Fictício da Silva",
+              "parts": [
+                {
+                  "type": "http://gedcomx.org/Given",
+                  "value": "Joaquim"
+                },
+                {
+                  "type": "http://gedcomx.org/Surname",
+                  "value": "Fictício da Silva"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "SINT-001.nasc",
+          "attribution": {
+            "contributor": {
+              "resource": "https://api.familysearch.org/platform/users/agents/SINT-AGT",
+              "resourceId": "SINT-AGT"
+            },
+            "modified": 1543677067759
+          },
+          "type": "http://gedcomx.org/Birth",
+          "date": {
+            "original": "3 abr 1820",
+            "formal": "+1820-04-03"
+          },
+          "place": {
+            "original": "Vila Exemplo, Minas Gerais, Brasil",
+            "normalized": [
+              {
+                "lang": "pt",
+                "value": "Vila Exemplo, Minas Gerais, Brasil"
+              }
+            ]
+          }
+        },
+        {
+          "id": "SINT-001.morte",
+          "type": "http://gedcomx.org/Death",
+          "date": {
+            "original": "12 nov 1890",
+            "formal": "+1890-11-12"
+          },
+          "place": {
+            "original": "Vila Exemplo, Minas Gerais, Brasil"
+          }
+        }
+      ],
+      "display": {
+        "name": "Joaquim Fictício da Silva",
+        "gender": "Male",
+        "lifespan": "1820-1890"
+      }
+    }
+  ]
+}

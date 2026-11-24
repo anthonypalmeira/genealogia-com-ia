@@ -1,0 +1,13 @@
+{
+  "users" : [ {
+    "id" : "cis.user.SINT-ETC",
+    "contactName" : "Usuária Sintética",
+    "personId" : "SINT-USR",
+    "treeUserId" : "SINT-TRE",
+    "links" : {
+      "self" : {
+        "href" : "https://api.familysearch.org/platform/users/current"
+      }
+    }
+  } ]
+}
