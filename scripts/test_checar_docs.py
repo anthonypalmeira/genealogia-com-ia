@@ -4,12 +4,20 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checar_docs import Commands, checar, cli_commands
+from checar_docs import checar, read_command
 
-# The command tree of a small made-up CLI: two groups, three commands.
-COMMANDS: Commands = {"fs": {"pessoa": {}, "pais": {}}, "sessao": {"conferir": {}}}
+# What every command of a small made-up CLI prints at the end of its `--help`,
+# in clap's layout: its own help option and the options of the whole CLI.
+COMMON_OPTIONS = (
+    "  -h, --help\n"
+    "          Print help (see a summary with '-h')\n"
+    "\n"
+    "Opções gerais:\n"
+    "      --json\n"
+    "          Saída em JSON: uma linha por item, sem o --formato do desenho\n"
+)
 
-# What a made-up CLI prints for `--help`, by command path, in clap's layout.
+# The `--help` of the made-up CLI, by command path: two groups, five commands.
 HELP = {
     (): (
         "CLI para agentes.\n\nUsage: garimpo [OPTIONS] <COMMAND>\n\n"
@@ -20,27 +28,61 @@ HELP = {
         "  help    Print this message or the help of the given subcommand(s)\n"
         "\n"
         "Options:\n"
-        "  -h, --help\n"
-        "          Print help\n"
-    ),
+        "  -V, --version\n"
+        "          Print version\n"
+        "\n"
+    )
+    + COMMON_OPTIONS,
     ("sessao",): (
-        "Usage: garimpo sessao <COMMAND>\n\n"
+        "Usage: garimpo sessao [OPTIONS] <COMMAND>\n\n"
         "Commands:\n"
         "  conferir  Confere a sessão\n"
         "  help      Print this message\n"
-    ),
+        "\n"
+        "Options:\n"
+    )
+    + COMMON_OPTIONS,
     ("fs",): (
-        "Usage: garimpo fs <COMMAND>\n\n"
+        "Usage: garimpo fs [OPTIONS] <COMMAND>\n\n"
         "Commands:\n"
         "  pessoa         Uma pessoa, numa linha\n"
+        "  pais           Os pais de uma pessoa\n"
+        "  ascendencia    Sobe pelos pais\n"
         "  catalogo-item  Um item do catálogo\n"
+        "\n"
+        "Options:\n"
+    )
+    + COMMON_OPTIONS,
+    ("sessao", "conferir"): (
+        "Usage: garimpo sessao conferir [OPTIONS]\n\nOptions:\n" + COMMON_OPTIONS
     ),
-    ("sessao", "conferir"): "Usage: garimpo sessao conferir [OPTIONS]\n",
-    ("fs", "pessoa"): "Usage: garimpo fs pessoa [OPTIONS] <ID>\n",
+    ("fs", "pessoa"): (
+        "Usage: garimpo fs pessoa [OPTIONS] <ID>\n\nOptions:\n" + COMMON_OPTIONS
+    ),
+    ("fs", "pais"): (
+        "Usage: garimpo fs pais [OPTIONS] <ID>\n\nOptions:\n" + COMMON_OPTIONS
+    ),
+    ("fs", "ascendencia"): (
+        "Usage: garimpo fs ascendencia [OPTIONS] --saida <ARQUIVO> <ID>\n\n"
+        "Arguments:\n"
+        "  <ID>\n"
+        "          A pessoa de onde a varredura parte\n"
+        "\n"
+        "Options:\n"
+        "      --geracoes <N>\n"
+        "          Quantas gerações além da pessoa de partida\n"
+        "\n"
+        "      --saida <ARQUIVO>\n"
+        "          O arquivo da varredura\n"
+        "\n"
+    )
+    + COMMON_OPTIONS,
     ("fs", "catalogo-item"): (
-        "Usage: garimpo fs catalogo-item <ID>\n\nArguments:\n  <ID>\n"
+        "Usage: garimpo fs catalogo-item [OPTIONS] <ID>\n\nOptions:\n" + COMMON_OPTIONS
     ),
 }
+
+CLI = read_command(HELP.__getitem__)
 
 
 class ChecarDocs(unittest.TestCase):
@@ -56,9 +98,7 @@ class ChecarDocs(unittest.TestCase):
             destino.parent.mkdir(parents=True, exist_ok=True)
             destino.write_text(texto, encoding="utf-8")
         markdown = [Path(nome) for nome in arquivos if nome.endswith(".md")]
-        return [
-            (str(p.arquivo), p.linha) for p in checar(self.raiz, markdown, COMMANDS)
-        ]
+        return [(str(p.arquivo), p.linha) for p in checar(self.raiz, markdown, CLI)]
 
     def test_link_para_arquivo_que_nao_existe_e_apontado(self) -> None:
         achados = self.problemas(
@@ -205,12 +245,13 @@ class ChecarDocs(unittest.TestCase):
                     "garimpo sessao conferir && garimpo arvore subir\n"
                     "garimpo --json fs pessoa ID\n"
                     "garimpo --teto-sessao 10 fs retratos ID\n"
+                    "garimpo e gravar\n"
                     "```\n"
                 )
             }
         )
         self.assertEqual(
-            found, [("docs/skills/abertura.md", line) for line in (2, 5, 6, 7)]
+            found, [("docs/skills/abertura.md", line) for line in (2, 5, 6, 7, 8)]
         )
 
     def test_cli_commands_with_arguments_and_prose_about_the_cli_pass(self) -> None:
@@ -223,25 +264,49 @@ class ChecarDocs(unittest.TestCase):
                     "Rode `garimpo fs pessoa <ID> --json` e `garimpo fs pais ID`.\n"
                     "O grupo `garimpo fs` lê a árvore: `garimpo fs <comando> --help`.\n"
                     "A ajuda: `garimpo --help` e `garimpo fs --help`.\n"
+                    "Curtas: `garimpo -h`, `garimpo -V` e `garimpo -h fs pessoa`.\n"
+                    "Suba com `garimpo fs ascendencia <ID> --saida=<arquivo> -h`.\n"
+                    "Num grupo: `garimpo fs <comando> --geracoes <N>`.\n"
+                    "Rode `garimpo fs pessoa <ID>`, com `--teto-sessao` se preciso.\n"
                     "O estado fica em `~/.garimpo`, ou em `GARIMPO_DIR`.\n"
                     "\n"
                     "```sh\n"
                     "# Confere a sessão antes de subir.\n"
                     'printf %s "$TOKEN" | garimpo sessao conferir\n'
+                    "garimpo fs ascendencia <ID> --geracoes <N> \\\n"
+                    "  --saida pesquisa/ascendencia-<ID>.jsonl --json\n"
+                    "cargo build --locked && garimpo fs pessoa <ID>\n"
+                    'garimpo fs ascendencia <ID> --saida "um arquivo --antigo.jsonl"\n'
+                    'nome="$(garimpo fs pessoa <ID> --json)"\n'
+                    "garimpo fs pessoa <ID> --json>pessoa.json\n"
                     "```\n"
                 )
             }
         )
         self.assertEqual(found, [])
 
-    def test_command_tree_is_read_from_the_help_of_each_command(self) -> None:
-        self.assertEqual(
-            cli_commands(HELP.__getitem__),
+    def test_cli_option_that_the_command_does_not_have_is_reported(self) -> None:
+        found = self.problemas(
             {
-                "sessao": {"conferir": {}, "help": {}},
-                "fs": {"pessoa": {}, "catalogo-item": {}},
-                "help": {},
-            },
+                "docs/skills/abertura.md": (
+                    "# Abertura\n"
+                    "Suba com `garimpo fs ascendencia <ID> --geracao 8`.\n"
+                    "Leia com `garimpo fs pessoa <ID> --json --saida=<arquivo>`.\n"
+                    "\n"
+                    "```sh\n"
+                    "garimpo fs ascendencia <ID> --geracoes <N> \\\n"
+                    "  --saida pesquisa/ascendencia-<ID>.jsonl --ano-corte 1700\n"
+                    "garimpo fs pais <ID> -j | garimpo fs pessoa - --json\n"
+                    'garimpo fs ascendencia <ID> --saida "a&b.jsonl" --geracao 8\n'
+                    "garimpo fs pessoa <ID> --json.\n"
+                    "garimpo fs pessoa <ID> --formato texto\n"
+                    "```\n"
+                )
+            }
+        )
+        self.assertEqual(
+            found,
+            [("docs/skills/abertura.md", line) for line in (2, 3, 6, 8, 9, 10, 11)],
         )
 
 

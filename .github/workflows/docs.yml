@@ -16,11 +16,41 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
+      - uses: astral-sh/setup-uv@v10.4.0
+      - name: Lint, formato e tipos da checagem
+        env:
+          RUFF: ruff@0.17.6
+        run: |
+          uvx "$RUFF" check scripts
+          uvx "$RUFF" format --check scripts
+          uvx mypy@2.4.1 --strict scripts
       - name: Testes da checagem
         run: python3 -m unittest discover -s scripts
       # The check builds the CLI to read its help; installs the version pinned
       # in rust-toolchain.toml.
       - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
-      - name: Links, frontmatter das skills, comandos do garimpo e dados pessoais
+      - name: Links, frontmatter das skills, comandos e opções do garimpo e dados pessoais
         run: python3 scripts/checar_docs.py
+
+  manifestos:
+    runs-on: ubuntu-latest
+    env:
+      CHECK_JSONSCHEMA: check-jsonschema@0.39.0
+      # Cursor publishes its schemas only in its plugins repository, without
+      # versions: the commit pins them.
+      CURSOR_SCHEMAS: https://raw.githubusercontent.com/cursor/plugins/ca782ed8b3c2c521cead8e1720d55c3a5dbf2347/schemas
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0
+      - name: Manifesto aberto (plugin.json)
+        run: >
+          uvx "$CHECK_JSONSCHEMA"
+          --schemafile https://agent-plugins.org/schemas/1.0.0/plugin.schema.json
+          plugin.json
+      - name: Manifestos do Cursor
+        run: |
+          uvx "$CHECK_JSONSCHEMA" --schemafile "$CURSOR_SCHEMAS/plugin.schema.json" .cursor-plugin/plugin.json
+          uvx "$CHECK_JSONSCHEMA" --schemafile "$CURSOR_SCHEMAS/marketplace.schema.json" .cursor-plugin/marketplace.json
+      - name: Marketplace do Claude Code
+        run: npx --yes @anthropic-ai/claude-code@2.1.331 plugin validate .

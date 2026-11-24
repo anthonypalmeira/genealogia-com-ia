@@ -59,12 +59,14 @@ Os detalhes e as fontes estão em [termos e riscos](docs/guias/termos-e-riscos.m
 
 ## Contribuir
 
-Depois de editar Markdown, rode a checagem, que confere os links entre documentos, o frontmatter das skills, os comandos do `garimpo` citados (ela compila a CLI com o cargo) e a ausência de CPF, e-mail e telefone:
+Depois de editar Markdown, rode a checagem, que confere os links entre documentos, o frontmatter das skills, os comandos e as opções do `garimpo` citados (ela compila a CLI com o cargo) e a ausência de CPF, e-mail e telefone:
 
 ```sh
 python3 scripts/checar_docs.py
 python3 -m unittest discover -s scripts
 ```
+
+O CI roda também o lint e os tipos desse script e valida os manifestos de plugin, com os comandos de [docs.yml](.github/workflows/docs.yml).
 
 Os testes da CLI rodam o binário contra um FamilySearch e um digitarq falsos, locais: nenhum deles chama um serviço real.
 
