@@ -7,7 +7,8 @@
 
 mod bridge;
 pub mod cli;
-mod coverage;
+pub mod coverage;
+mod dates;
 mod diagram;
 mod digitarq;
 pub mod error;

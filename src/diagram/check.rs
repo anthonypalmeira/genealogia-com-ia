@@ -2,10 +2,8 @@
 //! link with a grade and a document, dates that are possible, one connected
 //! direct line, and the weakest link of that line pointed out.
 
-use super::{Lineage, Link, Role};
-
-/// The youngest and the oldest a parent can plausibly be at a child's birth.
-const PARENT_AGES: std::ops::RangeInclusive<i32> = 12..=80;
+use super::{Lineage, Link, Person, Role};
+use crate::dates::{self, Date, Lifespan};
 
 /// The longest life taken as possible, in years.
 const LONGEST_LIFE: i32 = 120;
@@ -117,30 +115,18 @@ impl Checked {
 
 /// What makes the dates of a child and a parent impossible together.
 fn impossible_dates(lineage: &Lineage, link: &Link) -> Vec<String> {
-    let (child, parent) = (&lineage.persons[link.from], &lineage.persons[link.to]);
-    let mut broken = Vec::new();
     if link.relation.is_some() {
-        return broken;
+        return Vec::new();
     }
-    if let (Some(child_born), Some(parent_born)) = (child.born, parent.born) {
-        let age = child_born - parent_born;
-        if !PARENT_AGES.contains(&age) {
-            broken.push(format!(
-                "{} teria {age} anos quando {} nasceu",
-                parent.name, child.name
-            ));
+    fn lifespan(person: &Person) -> Lifespan<'_> {
+        Lifespan {
+            name: &person.name,
+            born: person.born.map(Date::of_year),
+            died: person.died.map(Date::of_year),
         }
     }
-    // A father can die up to a year before the birth.
-    if let (Some(child_born), Some(parent_died)) = (child.born, parent.died)
-        && child_born > parent_died + 1
-    {
-        broken.push(format!(
-            "{} nasceu depois da morte de {}",
-            child.name, parent.name
-        ));
-    }
-    broken
+    let (child, parent) = (&lineage.persons[link.from], &lineage.persons[link.to]);
+    dates::impossible_together(lifespan(child), lifespan(parent))
 }
 
 /// The direct line: the direct links that follow one another from the

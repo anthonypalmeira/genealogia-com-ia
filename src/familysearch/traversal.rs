@@ -1,20 +1,20 @@
 //! Breadth-first ancestry and descendancy, in batches, saved to a file that
 //! allows resuming. Without the 1,000-person cut of the ready-made routes.
+//! The file is read back here too, by the commands that answer from it.
 
 use std::{
     collections::{HashSet, VecDeque},
     fs::{self, OpenOptions},
     io::{ErrorKind, Write},
     path::Path,
-    str,
 };
 
 use anyhow::Context;
-use gedcomx::Person;
+use gedcomx::{FactType, Person};
 use serde::{Deserialize, Serialize};
 
 use super::{BATCH, Gedcomx, PersonId, person_id};
-use crate::{error::Error, transport::Transport};
+use crate::{cli::Config, dates::Date, error::Error, familysearch::field, transport::Transport};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub(super) enum Direction {
@@ -26,39 +26,162 @@ pub(super) enum Direction {
 
 /// The first line of the file: which traversal it belongs to.
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-struct Header {
+pub(super) struct Header {
     #[serde(rename = "direcao")]
-    direction: Direction,
+    pub(super) direction: Direction,
     #[serde(rename = "raiz")]
-    root: PersonId,
+    pub(super) root: PersonId,
+    /// The cut year decides whom the traversal follows, and with it the
+    /// generation each person is first reached at: a file continues only
+    /// under the cut year it began with.
+    #[serde(rename = "ano-corte", default, skip_serializing_if = "Option::is_none")]
+    cut_year: Option<i32>,
 }
 
 /// One visited person, with what it takes to continue from it.
 #[derive(Debug, Serialize, Deserialize)]
-struct Line {
+pub(super) struct Line {
     #[serde(rename = "geracao")]
     generation: u32,
     #[serde(rename = "pais")]
-    parents: Vec<PersonId>,
+    pub(super) parents: Vec<PersonId>,
     #[serde(rename = "filhos")]
     children: Vec<PersonId>,
     #[serde(rename = "pessoa")]
-    person: Person,
+    pub(super) person: Person,
+}
+
+/// What a traversal file holds.
+struct Saved {
+    /// Its whole lines. A run interrupted in the middle of a write leaves the
+    /// last line cut short, maybe in the middle of a character: only whole
+    /// lines are read.
+    lines: String,
+    /// The length of the file in bytes, with the line cut short if there is
+    /// one. A file that does not exist is empty.
+    length: usize,
+}
+
+fn saved(file: &Path) -> Result<Saved, Error> {
+    let context = || format!("não consegui usar o arquivo {}", file.display());
+    let mut bytes = match fs::read(file) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == ErrorKind::NotFound => Vec::new(),
+        Err(error) => return Err(anyhow::Error::new(error).context(context()).into()),
+    };
+    let length = bytes.len();
+    let whole = bytes
+        .iter()
+        .rposition(|byte| *byte == b'\n')
+        .map_or(0, |end| end + 1);
+    bytes.truncate(whole);
+    Ok(Saved {
+        lines: String::from_utf8(bytes).with_context(context)?,
+        length,
+    })
+}
+
+/// A traversal read back from its file.
+#[derive(Debug)]
+pub(super) struct Traversal {
+    pub(super) header: Header,
+    /// The persons, in the order they were visited.
+    pub(super) lines: Vec<Line>,
+}
+
+impl Traversal {
+    /// Reads the file a traversal wrote, complete or not.
+    pub(super) fn read(file: &Path) -> Result<Self, Error> {
+        let saved = saved(file)?;
+        let mut lines = saved.lines.lines();
+        let header = lines
+            .next()
+            .and_then(|first| serde_json::from_str(first).ok())
+            .ok_or_else(|| {
+                Error::Input(format!(
+                    "{} não é o arquivo de uma varredura: gere-o com `garimpo fs ascendencia`",
+                    file.display()
+                ))
+            })?;
+        let lines = lines
+            .map(serde_json::from_str)
+            .collect::<Result<_, _>>()
+            .with_context(|| format!("não consegui ler a varredura {}", file.display()))?;
+        Ok(Self { header, lines })
+    }
+}
+
+/// Prints the persons of a traversal file, one per line: id, generation,
+/// every name, then one field per fact.
+pub(super) fn list(config: &Config, file: &Path) -> Result<(), Error> {
+    for line in Traversal::read(file)?.lines {
+        let person = &line.person;
+        let names = person
+            .names
+            .iter()
+            .flat_map(|name| &name.name_forms)
+            .filter_map(|form| form.full_text.as_deref())
+            .collect::<Vec<_>>()
+            .join(" / ");
+        let facts = person.facts.iter().map(|fact| {
+            let kind = fact.fact_type.to_string();
+            let date = fact.date.as_ref().and_then(|date| {
+                let formal = || date.formal.as_ref().map(ToString::to_string);
+                date.original.clone().or_else(formal)
+            });
+            let place = fact
+                .place
+                .as_ref()
+                .and_then(|place| place.original.as_deref());
+            // The type as GEDCOM X names it, without the address before it.
+            let parts = [
+                kind.rsplit('/').next(),
+                fact.value.as_deref(),
+                date.as_deref(),
+                place,
+            ];
+            field(Some(
+                parts.into_iter().flatten().collect::<Vec<_>>().join(" "),
+            ))
+        });
+        let short = [
+            field(person.id.as_ref()),
+            line.generation.to_string(),
+            field(Some(names)),
+        ]
+        .into_iter()
+        .chain(facts)
+        .collect::<Vec<_>>()
+        .join("\t");
+        config.print(&short, &line)?;
+    }
+    Ok(())
 }
 
 /// The persons still to visit, each with its generation.
 struct Queue {
     direction: Direction,
-    generations: u32,
+    /// The last generation whose persons go in, if there is one.
+    generations: Option<u32>,
+    /// Nobody is followed past a person born before this year.
+    cut_year: Option<i32>,
     pending: VecDeque<(PersonId, u32)>,
     seen: HashSet<PersonId>,
 }
 
 impl Queue {
     /// Queues the relatives of a visited person that were not seen yet, when
-    /// their generation fits the limit.
+    /// they fit the limits. A person christened before the cut year was born
+    /// before it too. A person with neither date in the tree is not known to
+    /// be past the cut year, so the traversal goes on through it.
     fn follow(&mut self, line: &Line) {
-        if line.generation >= self.generations {
+        let last_generation = self.generations.is_some_and(|last| line.generation >= last);
+        let past_cut = self.cut_year.is_some_and(|cut| {
+            let date = |kind| Date::of(&line.person, &kind);
+            let born = date(FactType::Birth).or_else(|| date(FactType::Christening));
+            born.is_some_and(|born| born.year() < cut)
+        });
+        if last_generation || past_cut {
             return;
         }
         let next = match self.direction {
@@ -80,41 +203,33 @@ pub(super) fn traverse(
     transport: &Transport,
     direction: Direction,
     root: &PersonId,
-    generations: u32,
+    generations: Option<u32>,
+    cut_year: Option<i32>,
     output: &Path,
 ) -> Result<usize, Error> {
     let context = || format!("não consegui usar o arquivo {}", output.display());
     let header = &Header {
         direction,
         root: root.clone(),
+        cut_year,
     };
     let mut queue = Queue {
         direction,
         generations,
+        cut_year,
         pending: VecDeque::from([(root.clone(), 0)]),
         seen: HashSet::from([root.clone()]),
     };
-    let existing = match fs::read(output) {
-        Ok(bytes) => bytes,
-        Err(error) if error.kind() == ErrorKind::NotFound => Vec::new(),
-        Err(error) => return Err(anyhow::Error::new(error).context(context()).into()),
-    };
-    // A run interrupted in the middle of a write leaves the last line cut
-    // short, maybe in the middle of a character: only whole lines are read.
-    let whole = existing
-        .iter()
-        .rposition(|byte| *byte == b'\n')
-        .map_or(0, |end| end + 1);
-    let mut lines = str::from_utf8(&existing[..whole])
-        .with_context(context)?
-        .lines();
+    let existing = saved(output)?;
+    let mut lines = existing.lines.lines();
     let first = lines.next();
     let same_traversal = first
         .is_some_and(|first| serde_json::from_str::<Header>(first).ok().as_ref() == Some(header));
     // Any other non-empty file is refused before it is touched.
-    if !existing.is_empty() && !same_traversal {
+    if existing.length > 0 && !same_traversal {
         return Err(Error::Input(format!(
-            "{} não é desta varredura; use outro arquivo em --saida",
+            "{} não é desta varredura (outra pessoa, outra direção ou outro --ano-corte); use \
+             outro arquivo em --saida",
             output.display()
         )));
     }
@@ -131,10 +246,10 @@ pub(super) fn traverse(
         .create(true)
         .open(output)
         .with_context(context)?;
-    if whole < existing.len() {
+    if existing.lines.len() < existing.length {
         // The cut-short tail is dropped, and its persons are requested again.
-        let length = u64::try_from(whole).expect("a file length fits in 64 bits");
-        file.set_len(length).with_context(context)?;
+        let whole = u64::try_from(existing.lines.len()).expect("a file length fits in 64 bits");
+        file.set_len(whole).with_context(context)?;
     }
     if first.is_none() {
         let text = serde_json::to_string(&header).context("não consegui gerar o cabeçalho")?;

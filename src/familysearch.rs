@@ -1,6 +1,8 @@
 //! The official FamilySearch tree routes (`/platform/tree`), read with the
 //! types of the `gedcomx` crate.
 
+mod paths;
+mod portraits;
 mod traversal;
 mod write;
 
@@ -23,6 +25,9 @@ use crate::{
 
 /// The most persons the batch route accepts in one request.
 const BATCH: usize = 200;
+
+/// How many generations a traversal covers when nothing else limits it.
+const GENERATIONS: u32 = 8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[error("identificador inválido: use só letras, números e hífen, como KWXX-XXX")]
@@ -215,8 +220,24 @@ pub fn run(config: &Config, command: &FsCommand) -> Result<(), Error> {
                 config.print(&line, &note)?;
             }
         }
-        FsCommand::Ancestry(args) => traverse(config, &transport, Direction::Ancestry, args)?,
-        FsCommand::Descendancy(args) => traverse(config, &transport, Direction::Descendancy, args)?,
+        FsCommand::Ancestry {
+            traversal,
+            cut_year,
+        } => traverse(
+            config,
+            &transport,
+            Direction::Ancestry,
+            traversal,
+            *cut_year,
+        )?,
+        FsCommand::Descendancy(args) => {
+            traverse(config, &transport, Direction::Descendancy, args, None)?;
+        }
+        FsCommand::Traversal { file } => traversal::list(config, file)?,
+        FsCommand::Paths { file, targets } => paths::list(config, file, targets)?,
+        FsCommand::Portraits { file, folder } => {
+            portraits::download(config, &transport, file, folder)?;
+        }
         FsCommand::CreateSource { write, source } => {
             write::create_source(config, &transport, write, source)?;
         }
@@ -237,13 +258,16 @@ fn traverse(
     transport: &Transport,
     direction: Direction,
     args: &TraversalArgs,
+    cut_year: Option<i32>,
 ) -> Result<(), Error> {
     let TraversalArgs {
         id,
         generations,
         output,
     } = args;
-    let persons = traversal::traverse(transport, direction, id, *generations, output)?;
+    // A cut year is a limit by itself.
+    let generations = generations.or(cut_year.is_none().then_some(GENERATIONS));
+    let persons = traversal::traverse(transport, direction, id, generations, cut_year, output)?;
     config.print(
         &format!("{persons}\t{}", output.display()),
         &json!({"pessoas": persons, "arquivo": output}),
@@ -330,14 +354,15 @@ fn notes(gedcomx: Gedcomx) -> impl Iterator<Item = Note> {
     gedcomx.persons.into_iter().flat_map(|person| person.notes)
 }
 
+/// The name the tree shows first for a person.
+fn name(person: &Person) -> Option<&str> {
+    let form = person.names.first()?.name_forms.first()?;
+    form.full_text.as_deref()
+}
+
 /// The short line of a person: id, name, sex, birth date and place, death date
 /// and place.
 fn person_line(person: &Person) -> String {
-    let name = person
-        .names
-        .first()
-        .and_then(|name| name.name_forms.first())
-        .and_then(|form| form.full_text.as_ref());
     // An open enum from another crate: anything but male or female has no sex here.
     let sex = match person.gender.as_ref().map(|gender| &gender.gender_type) {
         Some(GenderType::Male) => Some("M"),
@@ -349,7 +374,7 @@ fn person_line(person: &Person) -> String {
     let place = |kind| fact(kind)?.place.as_ref()?.original.as_ref();
     [
         field(person.id.as_ref()),
-        field(name),
+        field(name(person)),
         field(sex),
         field(date(FactType::Birth)),
         field(place(FactType::Birth)),

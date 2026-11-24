@@ -17,6 +17,7 @@ mod digitarq;
 mod group;
 mod images;
 mod pacing;
+mod portraits;
 mod read;
 mod search;
 mod session;
