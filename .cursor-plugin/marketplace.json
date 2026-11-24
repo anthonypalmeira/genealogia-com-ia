@@ -1,0 +1,5 @@
+{
+  "name": "genealogia-com-ia",
+  "owner": { "name": "Autores do genealogia-com-ia" },
+  "plugins": [{ "name": "genealogia-com-ia", "source": "." }]
+}

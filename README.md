@@ -8,7 +8,7 @@ Quem pesquisa genealogia com um agente de IA perde tempo com o que não é genea
 
 - **Instruções para agentes** ([AGENTS.md](AGENTS.md)): o mapa do kit e as regras que valem sempre. Claude e Codex leem sozinhos.
 - **Guias de referência** ([docs/guias/](docs/guias/)): [estratégias](docs/guias/estrategias.md) por tipo de problema, [fontes](docs/guias/fontes.md) por região, o [FamilySearch](docs/guias/familysearch.md) em detalhe, a [régua de prova e pistas](docs/guias/regua-de-prova.md), [leitura de imagem e operação](docs/guias/leitura-e-operacao.md) e [termos e riscos](docs/guias/termos-e-riscos.md).
-- **Skills de agente** ([.claude/skills/](.claude/skills/), que o Codex lê por `.agents/skills`) e a CLI **`garimpo`**, em Rust: em construção.
+- **Skills de agente** ([skills/](skills/)) e a CLI **`garimpo`**, em Rust: em construção.
 
 O kit traz ferramentas, método e modelos. A pesquisa de cada família fica na pasta de quem pesquisa, fora deste repositório.
 
@@ -27,7 +27,13 @@ Para quem pesquisa a própria família com a ajuda de um agente de IA e quer que
 2. Abra o seu agente (Claude Code, Codex ou outro que leia `AGENTS.md`) na pasta clonada. Ele carrega o mapa e as regras sozinho.
 3. Peça a pesquisa em português. O agente consulta os guias conforme a situação.
 
-As skills e a CLI `garimpo` terão as próprias instruções de instalação quando entrarem.
+As skills ficam em [skills/](skills/), no formato aberto de skills de agente. O kit se instala inteiro, como plugin, porque as skills apontam para os guias:
+
+- **Claude Code:** `/plugin marketplace add anthonypalmeira/genealogia-com-ia` e depois `/plugin install genealogia-com-ia@genealogia-com-ia`.
+- **Codex:** `codex plugin marketplace add anthonypalmeira/genealogia-com-ia` e depois `codex plugin add genealogia-com-ia@genealogia-com-ia`.
+- **Cursor:** em Customize, importe o repositório por "From GitHub Repository" e instale o plugin.
+
+As skills chamam a CLI `garimpo`, que precisa estar no `PATH`: na pasta clonada, `cargo install --path .`. A skill `caminhos` usa também o `jq`.
 
 ## Aviso: FamilySearch e os riscos de uso
 

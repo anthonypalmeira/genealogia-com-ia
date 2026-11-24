@@ -1,0 +1,12 @@
+{
+  "name": "genealogia-com-ia",
+  "description": "O kit genealogia-com-ia: skills e guias para pesquisar genealogia com agentes de IA.",
+  "owner": { "name": "Autores do genealogia-com-ia" },
+  "plugins": [
+    {
+      "name": "genealogia-com-ia",
+      "source": "./",
+      "description": "Skills e guias para pesquisar genealogia com agentes de IA, com foco no Brasil."
+    }
+  ]
+}

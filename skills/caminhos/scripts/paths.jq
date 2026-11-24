@@ -3,7 +3,7 @@
 # the child and of the parent cannot both be true. Years only: a hint about
 # data that is itself a hypothesis.
 #
-# Usage: jq -rn -f paths.jq --arg alvos "ID,ID" <sweep file>
+# Usage: jq -rn -f scripts/paths.jq --arg alvos "ID,ID" <sweep file>
 # A target that the sweep does not hold has no path and gives no line.
 # Line: path number, target id, child, parent, warning (`-` when none).
 
