@@ -9,7 +9,7 @@ Diz se a pessoa de partida chega a algum ancestral-alvo e por onde. A árvore s�
 
 **Argumentos:** o alvo, o limite e a pessoa de partida, que por padrão é a pessoa raiz do perfil.
 
-Os links deste arquivo partem da pasta real desta skill: se ela foi aberta por um link, como `.claude/skills` ou `.agents/skills`, resolva o caminho real dela antes de seguir o primeiro. Os roteiros dos passos 4 e 5 estão em `scripts/`, na pasta desta skill: nos comandos, `<skill>` é o caminho dela.
+Os roteiros dos passos 4 e 5 estão em `scripts/`, na pasta desta skill: nos comandos, `<skill>` é o caminho dela.
 
 ## Passos
 

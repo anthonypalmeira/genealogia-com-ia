@@ -9,8 +9,6 @@ Dá nota a cada elo de uma linhagem com o que já foi lido. Ler o que falta e bu
 
 Abra a [régua de prova](../../docs/guias/regua-de-prova.md) antes de graduar: a escala, as etiquetas de leitura, a nota por tipo de documento e as âncoras de identidade estão lá.
 
-Os links deste arquivo partem da pasta real desta skill: se ela foi aberta por um link, como `.claude/skills` ou `.agents/skills`, resolva o caminho real dela antes de seguir o primeiro.
-
 **Argumentos:** uma linhagem de `pesquisa/linhagens.md`; ou as pessoas de uma linhagem nova, em ordem, da mais nova à mais antiga; ou um elo só, que é uma linhagem de um elo. Para "da pessoa X ao ancestral Y" sem as pessoas do meio, ache antes o caminho com a skill `caminhos`.
 
 ## Passos

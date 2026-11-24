@@ -1,4 +1,5 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "genealogia-com-ia",
   "description": "Skills e guias para pesquisar genealogia com agentes de IA, com foco no Brasil.",
   "author": { "name": "Autores do genealogia-com-ia" },
