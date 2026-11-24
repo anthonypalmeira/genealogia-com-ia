@@ -96,6 +96,10 @@ impl TestEnv {
             .env("GARIMPO_FS_API", &self.api)
             .env("GARIMPO_FS_IDENT", &self.api)
             .env("GARIMPO_FS_SITE", &self.api)
+            .env("GARIMPO_FS_IMAGENS", &self.api)
+            .env("GARIMPO_DIGITARQ", &self.api)
+            // No wait between images, unless a test asks for one.
+            .env("GARIMPO_INTERVALO_IMAGENS_MS", "0")
             // So coverage also measures the binary, when it is on.
             .envs(env::var_os("LLVM_PROFILE_FILE").map(|profile| ("LLVM_PROFILE_FILE", profile)))
             .envs(self.extra.iter().map(|(name, value)| (name, value)))

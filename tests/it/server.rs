@@ -55,7 +55,7 @@ impl Request {
 pub(crate) struct Reply {
     status: u16,
     headers: Vec<(String, String)>,
-    body: String,
+    body: Vec<u8>,
 }
 
 impl Reply {
@@ -63,14 +63,19 @@ impl Reply {
         Self {
             status,
             headers: Vec::new(),
-            body: String::new(),
+            body: Vec::new(),
         }
     }
 
     pub(crate) fn json(status: u16, body: String) -> Self {
+        Self::bytes(status, "application/x-fs-v1+json", body.into_bytes())
+    }
+
+    /// An answer that is not text, such as an image.
+    pub(crate) fn bytes(status: u16, content_type: &str, body: Vec<u8>) -> Self {
         Self {
             status,
-            headers: vec![("Content-Type".into(), "application/x-fs-v1+json".into())],
+            headers: vec![("Content-Type".into(), content_type.into())],
             body,
         }
     }
@@ -135,7 +140,7 @@ impl FakeServer {
                         requests.lock().unwrap().push(request.clone());
                         let reply = respond(&request);
                         let mut response =
-                            Response::from_string(reply.body).with_status_code(reply.status);
+                            Response::from_data(reply.body).with_status_code(reply.status);
                         for (name, value) in reply.headers {
                             response.add_header(
                                 Header::from_bytes(name.as_bytes(), value.as_bytes()).unwrap(),

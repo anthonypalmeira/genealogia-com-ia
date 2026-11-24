@@ -11,6 +11,7 @@ Abra o guia quando a situação da linha aparecer:
 - [FamilySearch](docs/guias/familysearch.md): qualquer chamada ao FamilySearch, da sessão à gravação.
 - [Régua de prova e pistas](docs/guias/regua-de-prova.md): dar nota a um elo, decidir se é a mesma pessoa, registrar uma pista.
 - [Leitura de imagem e operação](docs/guias/leitura-e-operacao.md): baixar e ler imagens, delegar páginas, registrar cobertura, fechar a conversa.
+- `garimpo --help`: a CLI do kit, para a sessão, a árvore, as buscas, as imagens, o digitarq e o desenho de uma linhagem (`garimpo diagrama`).
 - [Termos e riscos](docs/guias/termos-e-riscos.md): dúvida sobre o que um site permite; dados de pessoas vivas.
 - [Abertura](docs/skills/abertura.md) e [fechamento](docs/skills/fechamento.md): os passos comuns a toda skill, ao rodar ou escrever uma.
 - [Pasta de pesquisa](modelos/pesquisa/README.md): montar ou ler `pesquisa/`, a pasta do usuário.

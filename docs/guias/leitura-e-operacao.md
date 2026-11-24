@@ -14,6 +14,8 @@ Como baixar, triar e ler imagens de documentos sem inchar a conversa, e como ope
 
 Pronto quando o manifesto tem uma linha por imagem pedida, cada uma com hash ou com a pendência anotada.
 
+O `garimpo imagens baixar` faz os passos 2 a 6, e o `garimpo imagens listar` o primeiro: veja [Imagens com o `garimpo`](familysearch.md#imagens-com-o-garimpo). Para o digitarq, `garimpo digitarq baixar` grava o mesmo manifesto.
+
 ## Ler
 
 | Passo | O que fazer |
@@ -62,6 +64,8 @@ Fora de questão:
 - apresentar qualquer um desses resultados como reprodução do documento.
 
 Numa das sessões, cinco horas de "recomposição" de um testamento desbotado deram uma imagem que continuava parecendo falsa. Quem avalia pode tratar o dossiê inteiro como adulterado. O que é ilegível no papel entra como `[ilegível]`, com a leitura de outra fonte citada ao lado.
+
+O `garimpo imagens` só tem essas três operações (`recortar`, com `--ampliar`, e `contraste`) e a folha de contato, que junta imagens reduzidas sem escrever nada sobre elas. O original baixado nunca é alterado: cada derivado é um arquivo novo, e o nome dele diz a operação e o trecho (`<nome>.r<x>-<y>-<largura>x<altura>.a2.jpg`, `<nome>.contraste.jpg`).
 
 Escolher quais documentos e páginas entram num relatório é decisão do autor. Tapar ou alterar parte de uma imagem é alteração do documento.
 

@@ -6,10 +6,10 @@ use std::path::Path;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::{Found, Hit, Query, Title, list, read, report, string_at};
+use super::{Query, Title, list, read, string_at};
 use crate::{
     cli::{CatalogArgs, Config},
-    coverage::{Kind, Search},
+    coverage::{Found, Hit, Kind, Search, count, report},
     error::Error,
     familysearch::field,
     transport::Transport,
@@ -150,7 +150,7 @@ pub(super) fn item(
         let title = source.display_title.as_ref().unwrap_or(&source.title);
         let hits: Vec<Hit> = list(source.film_note.as_ref()).iter().map(film).collect();
         Ok(Found {
-            total: super::count(&hits),
+            total: count(&hits),
             heading: Some(Hit {
                 id: id.to_string(),
                 line: [
