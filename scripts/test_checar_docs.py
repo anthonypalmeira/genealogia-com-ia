@@ -4,7 +4,43 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checar_docs import checar
+from checar_docs import Commands, checar, cli_commands
+
+# The command tree of a small made-up CLI: two groups, three commands.
+COMMANDS: Commands = {"fs": {"pessoa": {}, "pais": {}}, "sessao": {"conferir": {}}}
+
+# What a made-up CLI prints for `--help`, by command path, in clap's layout.
+HELP = {
+    (): (
+        "CLI para agentes.\n\nUsage: garimpo [OPTIONS] <COMMAND>\n\n"
+        "Commands:\n"
+        "  sessao  A sessão: conferir\n"
+        "  fs      A árvore pelas rotas oficiais: ler, percorrer\n"
+        "          e gravar\n"
+        "  help    Print this message or the help of the given subcommand(s)\n"
+        "\n"
+        "Options:\n"
+        "  -h, --help\n"
+        "          Print help\n"
+    ),
+    ("sessao",): (
+        "Usage: garimpo sessao <COMMAND>\n\n"
+        "Commands:\n"
+        "  conferir  Confere a sessão\n"
+        "  help      Print this message\n"
+    ),
+    ("fs",): (
+        "Usage: garimpo fs <COMMAND>\n\n"
+        "Commands:\n"
+        "  pessoa         Uma pessoa, numa linha\n"
+        "  catalogo-item  Um item do catálogo\n"
+    ),
+    ("sessao", "conferir"): "Usage: garimpo sessao conferir [OPTIONS]\n",
+    ("fs", "pessoa"): "Usage: garimpo fs pessoa [OPTIONS] <ID>\n",
+    ("fs", "catalogo-item"): (
+        "Usage: garimpo fs catalogo-item <ID>\n\nArguments:\n  <ID>\n"
+    ),
+}
 
 
 class ChecarDocs(unittest.TestCase):
@@ -20,7 +56,9 @@ class ChecarDocs(unittest.TestCase):
             destino.parent.mkdir(parents=True, exist_ok=True)
             destino.write_text(texto, encoding="utf-8")
         markdown = [Path(nome) for nome in arquivos if nome.endswith(".md")]
-        return [(str(p.arquivo), p.linha) for p in checar(self.raiz, markdown)]
+        return [
+            (str(p.arquivo), p.linha) for p in checar(self.raiz, markdown, COMMANDS)
+        ]
 
     def test_link_para_arquivo_que_nao_existe_e_apontado(self) -> None:
         achados = self.problemas(
@@ -155,6 +193,56 @@ class ChecarDocs(unittest.TestCase):
             }
         )
         self.assertEqual(achados, [])
+
+    def test_cli_command_that_does_not_exist_is_reported(self) -> None:
+        found = self.problemas(
+            {
+                "docs/skills/abertura.md": (
+                    "# Abertura\n"
+                    "Leia os retratos com `garimpo fs retratos <ID>`.\n"
+                    "\n"
+                    "```sh\n"
+                    "garimpo sessao conferir && garimpo arvore subir\n"
+                    "garimpo --json fs pessoa ID\n"
+                    "garimpo --teto-sessao 10 fs retratos ID\n"
+                    "```\n"
+                )
+            }
+        )
+        self.assertEqual(
+            found, [("docs/skills/abertura.md", line) for line in (2, 5, 6, 7)]
+        )
+
+    def test_cli_commands_with_arguments_and_prose_about_the_cli_pass(self) -> None:
+        found = self.problemas(
+            {
+                "docs/skills/abertura.md": (
+                    "# Abertura\n"
+                    "O garimpo espera sozinho as pausas.\n"
+                    "O `garimpo` grava a busca.\n"
+                    "Rode `garimpo fs pessoa <ID> --json` e `garimpo fs pais ID`.\n"
+                    "O grupo `garimpo fs` lê a árvore: `garimpo fs <comando> --help`.\n"
+                    "A ajuda: `garimpo --help` e `garimpo fs --help`.\n"
+                    "O estado fica em `~/.garimpo`, ou em `GARIMPO_DIR`.\n"
+                    "\n"
+                    "```sh\n"
+                    "# Confere a sessão antes de subir.\n"
+                    'printf %s "$TOKEN" | garimpo sessao conferir\n'
+                    "```\n"
+                )
+            }
+        )
+        self.assertEqual(found, [])
+
+    def test_command_tree_is_read_from_the_help_of_each_command(self) -> None:
+        self.assertEqual(
+            cli_commands(HELP.__getitem__),
+            {
+                "sessao": {"conferir": {}, "help": {}},
+                "fs": {"pessoa": {}, "catalogo-item": {}},
+                "help": {},
+            },
+        )
 
 
 if __name__ == "__main__":
