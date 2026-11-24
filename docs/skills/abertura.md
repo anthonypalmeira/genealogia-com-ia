@@ -10,12 +10,12 @@ Os passos com que toda skill do kit começa, antes de qualquer busca.
    | Pergunta | Onde está a resposta |
    |---|---|
    | O que já temos? | `estado.md`: as notas, os documentos, a decisão do pesquisador. As pistas em `pistas/` |
-   | O que foi buscado e deu negativo? | `garimpo cobertura consultar <grafia> --cobertura pesquisa/cobertura.jsonl`, para cada grafia do nome de cada pessoa do elo, e a seção Cobertura fora do `garimpo` do estado |
-   | O que não foi lido? | As linhas `parcial` dessas duas fontes, os documentos do estado sem a etiqueta [V] e as imagens de `pesquisa/imagens/` que nenhuma linha de cobertura dá como lidas |
-   | O que está pendente de acesso? | As linhas `pendente-de-acesso` dessas duas fontes |
+   | O que foi buscado e deu negativo? | `garimpo cobertura consultar <grafia> --cobertura pesquisa/cobertura.jsonl`, para cada grafia do nome de cada pessoa do elo |
+   | O que não foi lido? | As linhas `parcial` da cobertura, os documentos do estado sem a etiqueta [V] e as imagens de `pesquisa/imagens/` que nenhuma linha de cobertura dá como lidas |
+   | O que está pendente de acesso? | As linhas `pendente-de-acesso` da cobertura |
    | Que conversas estão abertas? | A seção Conversas abertas do estado |
 
-   Procure também cada grafia no resto de `pesquisa/`: outra conversa pode ter achado a pessoa em outro elo. Pronto quando cada elo tem as cinco respostas, nem que seja "nada".
+   De cada busca vale a linha mais recente da cobertura. Procure também cada grafia no resto de `pesquisa/`: outra conversa pode ter achado a pessoa em outro elo. Pronto quando cada elo tem as cinco respostas, nem que seja "nada".
 5. **Delegação.** Reparta o trabalho pela regra abaixo.
 
 ## Delegação
