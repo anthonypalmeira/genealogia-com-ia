@@ -14,7 +14,7 @@ use serde::Deserialize;
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
-use super::Token;
+use super::{Token, random_string};
 use crate::{cli::Config, error::Error, transport};
 
 #[derive(Deserialize)]
@@ -79,13 +79,6 @@ pub(super) fn login(
         .read_json()
         .context("a resposta da troca do código não trouxe o token")?;
     Token::new(&body.access_token)
-}
-
-/// 32 random bytes in base64url: 43 characters, the minimum for a PKCE verifier.
-fn random_string() -> Result<String, Error> {
-    let mut bytes = [0u8; 32];
-    getrandom::fill(&mut bytes).context("o sistema não forneceu bytes aleatórios")?;
-    Ok(URL_SAFE_NO_PAD.encode(bytes))
 }
 
 /// What a request to the loopback redirect brought.

@@ -38,6 +38,14 @@ impl Request {
         self.route() == (method, path)
     }
 
+    /// One parameter of the query, decoded.
+    pub(crate) fn param(&self, name: &str) -> Option<String> {
+        let (_, query) = self.path.split_once('?')?;
+        form_urlencoded::parse(query.as_bytes())
+            .find(|(key, _)| key == name)
+            .map(|(_, value)| value.into_owned())
+    }
+
     /// The method and the path, to compare with `assert_eq!`.
     pub(crate) fn route(&self) -> (&str, &str) {
         (&self.method, &self.path)
@@ -191,4 +199,32 @@ pub(crate) fn reference(id: &str) -> Value {
         "resource": format!("https://api.familysearch.org/platform/tree/persons/{id}"),
         "resourceId": id,
     })
+}
+
+/// A synthetic page image of the full text, as the internal route sends it.
+pub(crate) fn page_image(id: &str, text: &str) -> Value {
+    json!({
+        "id": format!("3:1:{id}"),
+        "sourceUrl": format!("https://www.familysearch.org/ark:/61903/3:1:{id}"),
+        "collectionId": "9990001",
+        "collectionTitle": "Coleção Sintética de Inventários",
+        "content": {
+            "recordDate": "1850",
+            "recordType": "Inventário",
+            "recordPlace": "Vila Exemplo, Minas Gerais, Brasil",
+            "title": "Vila Exemplo, Inventário 1850",
+            "textDocument": text,
+            "entities": [],
+            "highlightTexts": [],
+        },
+    })
+}
+
+/// An answer of the full-text route: `total` page images in all, of which
+/// `entries` came.
+pub(crate) fn full_text(total: usize, entries: &[Value]) -> Reply {
+    Reply::json(
+        200,
+        json!({"results": total, "index": 0, "entries": entries, "facets": []}).to_string(),
+    )
 }

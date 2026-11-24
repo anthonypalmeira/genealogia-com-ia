@@ -1,0 +1,66 @@
+{
+ "description": "#src_1",
+ "links": {
+  "self": {
+   "href": "https://api.familysearch.org/platform/records/waypoints/SINT-V1:100,101?cc=9990001&start=0&count=2",
+   "results": 3
+  }
+ },
+ "sourceDescriptions": [
+  {
+   "about": "https://api.familysearch.org/platform/records/waypoints/SINT-V1:100,101?cc=9990001",
+   "id": "src_1",
+   "resourceType": "http://gedcomx.org/Collection",
+   "titles": [
+    {
+     "lang": "pt",
+     "value": "Inventários, 1840-1860"
+    }
+   ],
+   "componentOf": {
+    "description": "#src_2"
+   }
+  },
+  {
+   "about": "https://api.familysearch.org/platform/records/waypoints/SINT-W1:100?cc=9990001",
+   "id": "src_2",
+   "resourceType": "http://gedcomx.org/Collection",
+   "titles": [
+    {
+     "lang": "pt",
+     "value": "Vila Exemplo"
+    }
+   ],
+   "componentOf": {
+    "description": "#src_3"
+   }
+  },
+  {
+   "about": "https://api.familysearch.org/platform/records/collections/9990001/waypoints",
+   "id": "src_3",
+   "resourceType": "http://gedcomx.org/Collection",
+   "titles": [
+    {
+     "lang": "pt",
+     "value": "Coleção Sintética de Inventários"
+    }
+   ]
+  },
+  {
+   "about": "https://www.familysearch.org/ark:/61903/3:1:SINT-IMG-001?cc=9990001&wc=SINT-V1%3A100%2C101",
+   "componentOf": {
+    "description": "#src_1"
+   },
+   "id": "sd_4",
+   "resourceType": "http://gedcomx.org/DigitalArtifact"
+  },
+  {
+   "about": "https://www.familysearch.org/ark:/61903/3:1:SINT-IMG-002?cc=9990001&wc=SINT-V1%3A100%2C101",
+   "componentOf": {
+    "description": "#src_1"
+   },
+   "id": "sd_5",
+   "resourceType": "http://gedcomx.org/DigitalArtifact"
+  }
+ ]
+}

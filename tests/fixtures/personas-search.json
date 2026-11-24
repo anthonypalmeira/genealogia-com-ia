@@ -1,0 +1,105 @@
+{
+ "results": 2,
+ "index": 0,
+ "entries": [
+  {
+   "id": "SINT-R01",
+   "score": 3.1,
+   "confidence": 5,
+   "content": {
+    "gedcomx": {
+     "persons": [
+      {
+       "names": [
+        {
+         "nameForms": [
+          {
+           "fullText": "Manoel Fictício da Silva"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "principal": true,
+       "gender": {
+        "type": "http://gedcomx.org/Male"
+       },
+       "facts": [
+        {
+         "value": "Legítimo",
+         "type": "http://gedcomx.org/Legitimation"
+        },
+        {
+         "type": "http://gedcomx.org/Christening",
+         "date": {
+          "original": "3 abr 1820"
+         },
+         "place": {
+          "original": "Vila Exemplo, Minas Gerais, Brasil"
+         }
+        }
+       ],
+       "names": [
+        {
+         "nameForms": [
+          {
+           "fullText": "Joaquim Fictício da Silva"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "names": [
+        {
+         "nameForms": [
+          {
+           "fullText": "Maria Inventada de Jesus"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "sourceDescriptions": [
+      {
+       "resourceType": "http://gedcomx.org/Collection",
+       "about": "https://www.familysearch.org/service/cds/recapi/collections/9990003",
+       "titles": [
+        {
+         "lang": "pt",
+         "value": "Coleção Sintética de Batismos"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "SINT-R02",
+   "score": 2.4,
+   "confidence": 3,
+   "content": {
+    "gedcomx": {
+     "persons": [
+      {
+       "principal": true,
+       "names": [
+        {
+         "nameForms": [
+          {
+           "fullText": "Joaquim Imaginado da Silva"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "facets": []
+}

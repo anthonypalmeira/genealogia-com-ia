@@ -1,0 +1,38 @@
+{
+ "source": {
+  "note": [
+   {
+    "text": "Microfilme de manuscritos de um arquivo sintético.",
+    "type": "LOC",
+    "seq": 1
+   }
+  ],
+  "film_note": [
+   {
+    "digital_film_no": 9990001,
+    "filmno": "1234567",
+    "digital_film_rights": "UNREST",
+    "items": "Item 1",
+    "text": "Batismos 1750-1800"
+   },
+   {
+    "digital_film_no": "9990002",
+    "filmno": "",
+    "digital_film_rights": "NO_ACC",
+    "text": "Casamentos 1800-1850"
+   }
+  ],
+  "author": [
+   {
+    "display_text": "Igreja Católica. Paróquia Sintética (Vila Exemplo)",
+    "type": "Main Author"
+   }
+  ],
+  "display_title": "Vila Exemplo, registros paroquiais, 1750-1900",
+  "title": "Vila Exemplo, registros paroquiais",
+  "titleno": 9990002,
+  "format": "Manuscrito",
+  "inclusive_dates": "1750-1900",
+  "available_online": "Y"
+ }
+}

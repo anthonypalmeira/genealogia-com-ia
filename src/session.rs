@@ -20,6 +20,7 @@ use std::{
 };
 
 use anyhow::{Context, anyhow};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use serde_json::json;
 
 use crate::{
@@ -57,6 +58,14 @@ impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("Token(***)")
     }
+}
+
+/// 32 random bytes in base64url: 43 characters, the minimum for a PKCE
+/// verifier, and enough for a secret nobody guesses.
+pub(crate) fn random_string() -> Result<String, Error> {
+    let mut bytes = [0u8; 32];
+    getrandom::fill(&mut bytes).context("o sistema não forneceu bytes aleatórios")?;
+    Ok(URL_SAFE_NO_PAD.encode(bytes))
 }
 
 /// Runs a command of the `sessao` group.

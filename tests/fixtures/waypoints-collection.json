@@ -1,0 +1,58 @@
+{
+ "description": "#sd_c_9990001",
+ "sourceDescriptions": [
+  {
+   "about": "https://api.familysearch.org/platform/records/collections/9990001/waypoints",
+   "id": "sd_c_9990001",
+   "resourceType": "http://gedcomx.org/Collection",
+   "titles": [
+    {
+     "lang": "pt",
+     "value": "Coleção Sintética de Inventários"
+    }
+   ],
+   "componentOf": {
+    "description": "#sd_cr_9990001"
+   }
+  },
+  {
+   "about": "https://api.familysearch.org/platform/records/collections/9990001",
+   "id": "sd_cr_9990001",
+   "resourceType": "http://gedcomx.org/Collection",
+   "titles": [
+    {
+     "lang": "pt",
+     "value": "Coleção Sintética de Inventários"
+    }
+   ]
+  },
+  {
+   "about": "https://api.familysearch.org/platform/records/waypoints/SINT-W1:100?cc=9990001",
+   "id": "sd_3",
+   "resourceType": "http://gedcomx.org/Collection",
+   "titles": [
+    {
+     "lang": "pt",
+     "value": "Vila Exemplo"
+    }
+   ],
+   "componentOf": {
+    "description": "#sd_c_9990001"
+   }
+  },
+  {
+   "about": "https://api.familysearch.org/platform/records/waypoints/SINT-W2:100?cc=9990001",
+   "id": "sd_4",
+   "resourceType": "http://gedcomx.org/Collection",
+   "titles": [
+    {
+     "lang": "pt",
+     "value": "Arraial Inventado"
+    }
+   ],
+   "componentOf": {
+    "description": "#sd_c_9990001"
+   }
+  }
+ ]
+}

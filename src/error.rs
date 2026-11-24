@@ -34,6 +34,12 @@ pub enum Error {
         person: PersonId,
         cause: Box<Error>,
     },
+    /// The browser bridge has no tab running its loop.
+    #[error("ponte sem aba: nenhuma aba do navegador está ligada à ponte")]
+    BridgeDetached,
+    /// The internal routes were switched off for this run.
+    #[error("rotas internas desligadas: este comando usa rotas que o FamilySearch não documenta")]
+    InternalRoutesOff,
     /// Anything else: network, disk, unexpected response.
     #[error(transparent)]
     Other(#[from] anyhow::Error),
@@ -50,6 +56,8 @@ impl Error {
             Self::Blocked { .. } | Self::Paused { .. } => 4,
             Self::SessionCap { .. } => 5,
             Self::WriteNotAuthorized => 6,
+            Self::BridgeDetached => 7,
+            Self::InternalRoutesOff => 8,
             Self::SourceNotAttached { cause, .. } => cause.exit_code(),
         }
     }
@@ -62,12 +70,15 @@ impl Error {
             Self::Input(_) => "corrija a entrada (veja `garimpo --help`) e rode de novo".into(),
             Self::SessionMissing | Self::SessionExpired => {
                 "peça ao usuário para entrar no FamilySearch, entregue a sessão nova com \
-                 `garimpo sessao entregar` e rode de novo"
+                 `garimpo sessao entregar` (ou, pela ponte, avalie de novo na aba logada o \
+                 trecho de `garimpo ponte abrir`) e rode de novo"
                     .into()
             }
             Self::Blocked { .. } => {
-                "pare de chamar o FamilySearch por agora e avise o usuário; bloqueio não \
-                 significa que o dado não existe"
+                "um 403 no grupo `busca` sem a ponte aberta é o site recusando fora do \
+                 navegador: abra a ponte com `garimpo ponte abrir` e rode de novo. Em \
+                 qualquer outro caso, pare de chamar o FamilySearch por agora e avise o \
+                 usuário; bloqueio não significa que o dado não existe"
                     .into()
             }
             Self::Paused { seconds } => format!(
@@ -82,6 +93,16 @@ impl Error {
             Self::WriteNotAuthorized => {
                 "mostre o plano de gravação ao usuário e, com o sim dele, repita com \
                  `--rodada <identificação da rodada>`"
+                    .into()
+            }
+            Self::BridgeDetached => {
+                "rode `garimpo ponte abrir`, avalie o trecho que ele imprime na aba logada do \
+                 FamilySearch e rode de novo; se o usuário não está logado, peça o login"
+                    .into()
+            }
+            Self::InternalRoutesOff => {
+                "pare; só o usuário religa, com --rotas-internas ligadas ou \
+                 GARIMPO_ROTAS_INTERNAS=ligadas"
                     .into()
             }
             Self::SourceNotAttached {
