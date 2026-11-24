@@ -18,5 +18,9 @@ jobs:
           python-version: "3.13"
       - name: Testes da checagem
         run: python3 -m unittest discover -s scripts
-      - name: Links, frontmatter das skills e dados pessoais
+      # The check builds the CLI to read its help; installs the version pinned
+      # in rust-toolchain.toml.
+      - run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Links, frontmatter das skills, comandos do garimpo e dados pessoais
         run: python3 scripts/checar_docs.py

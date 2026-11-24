@@ -12,6 +12,8 @@ Abra o guia quando a situação da linha aparecer:
 - [Régua de prova e pistas](docs/guias/regua-de-prova.md): dar nota a um elo, decidir se é a mesma pessoa, registrar uma pista.
 - [Leitura de imagem e operação](docs/guias/leitura-e-operacao.md): baixar e ler imagens, delegar páginas, registrar cobertura, fechar a conversa.
 - [Termos e riscos](docs/guias/termos-e-riscos.md): dúvida sobre o que um site permite; dados de pessoas vivas.
+- [Abertura](docs/skills/abertura.md) e [fechamento](docs/skills/fechamento.md): os passos comuns a toda skill, ao rodar ou escrever uma.
+- [Pasta de pesquisa](modelos/pesquisa/README.md): montar ou ler `pesquisa/`, a pasta do usuário.
 - [Ferramentas existentes](docs/pesquisa/ferramentas-existentes.md): antes de propor uma dependência ou uma integração.
 - [`scripts/checar_docs.py`](scripts/checar_docs.py): rode depois de editar Markdown.
 

@@ -8,7 +8,7 @@ Quem pesquisa genealogia com um agente de IA perde tempo com o que não é genea
 
 - **Instruções para agentes** ([AGENTS.md](AGENTS.md)): o mapa do kit e as regras que valem sempre. Claude e Codex leem sozinhos.
 - **Guias de referência** ([docs/guias/](docs/guias/)): [estratégias](docs/guias/estrategias.md) por tipo de problema, [fontes](docs/guias/fontes.md) por região, o [FamilySearch](docs/guias/familysearch.md) em detalhe, a [régua de prova e pistas](docs/guias/regua-de-prova.md), [leitura de imagem e operação](docs/guias/leitura-e-operacao.md) e [termos e riscos](docs/guias/termos-e-riscos.md).
-- **Skills de agente** e a CLI **`garimpo`**, em Rust: em construção.
+- **Skills de agente** ([.claude/skills/](.claude/skills/), que o Codex lê por `.agents/skills`) e a CLI **`garimpo`**, em Rust: em construção.
 
 O kit traz ferramentas, método e modelos. A pesquisa de cada família fica na pasta de quem pesquisa, fora deste repositório.
 
@@ -44,7 +44,7 @@ Os detalhes e as fontes estão em [termos e riscos](docs/guias/termos-e-riscos.m
 
 ## Contribuir
 
-Depois de editar Markdown, rode a checagem, que confere os links entre documentos, o frontmatter das skills e a ausência de CPF, e-mail e telefone:
+Depois de editar Markdown, rode a checagem, que confere os links entre documentos, o frontmatter das skills, os comandos do `garimpo` citados (ela compila a CLI com o cargo) e a ausência de CPF, e-mail e telefone:
 
 ```sh
 python3 scripts/checar_docs.py
