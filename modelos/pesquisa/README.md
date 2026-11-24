@@ -13,10 +13,13 @@ Para as skills, a pasta é `pesquisa/`: um link, na pasta em que a conversa roda
 | `elos/<elo>/estado.md` | O estado datado do elo e a **fonte única** das notas dele. No topo, `filiacao` e `identidade` são as notas em vigor, na escala da régua: a decisão do pesquisador, quando há; senão, a nota da régua |
 | `elos/<elo>/pistas/<pista>.yaml` | Uma pista por arquivo, no [formato da régua](../../docs/guias/regua-de-prova.md#formato-de-registro) |
 | `elos/<elo>/recortes/` | Recortes dos documentos lidos |
-| `imagens/<filme>/` | As imagens baixadas de um filme, que servem a vários elos, com o manifesto. Num repositório git, só o manifesto é versionado |
+| `imagens/<filme>/` | As imagens baixadas de um filme, que servem a vários elos, com o manifesto, as miniaturas e as folhas de contato, o texto puxado (`texto.jsonl`), o mapa do filme (`mapa.md`) e as leituras página a página (`leitura-<AAAA-MM-DD>-<de>-<ate>.md`). Num repositório git, as imagens ficam fora |
 | `cobertura.jsonl` | O registro de buscas do `garimpo`, um só para a pesquisa, porque a mesma busca serve a vários elos. Passe `--cobertura pesquisa/cobertura.jsonl` a toda busca |
+| `alteracoes.jsonl` | O registro do que o `garimpo` gravou no FamilySearch. Passe `--registro pesquisa/alteracoes.jsonl` a toda gravação |
+| `pedidos/<AAAA-MM-DD>-<instituição>.md` | Um pedido a um cartório, uma cúria ou um arquivo, com a situação e o histórico, copiado de [pedido.md](pedido.md). A carta em PDF e cada documento que chegar ficam ao lado, com o mesmo nome e os sufixos `-carta` e `-recebido-<n>` |
+| `catalogos/` | Catálogos e índices de fundos baixados inteiros, para varrer localmente |
 | `varreduras/` | Varreduras da árvore, para não refazer |
-| `relatorios/<AAAA-MM-DD>-<assunto>.md` | O relatório de cada conversa |
+| `relatorios/<AAAA-MM-DD>-<assunto>.md` | O relatório de cada conversa. A descrição e os desenhos de um diagrama ficam ao lado, com o mesmo nome |
 
 A cobertura de um elo tem duas partes: as buscas do `garimpo`, que `garimpo cobertura consultar` responde pelo nome das pessoas, e a seção Cobertura fora do `garimpo` do estado, com o que foi buscado em outros acervos e lido página a página.
 

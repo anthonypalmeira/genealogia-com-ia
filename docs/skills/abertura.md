@@ -25,7 +25,7 @@ Decida sozinho, com o estado retomado:
 | Trabalho | Dono |
 |---|---|
 | Dois ou mais elos independentes, cada um pedindo leitura ou busca | Uma thread nova por elo |
-| Mais de ~20 páginas de imagem | Subagentes, em faixas sem sobreposição: [Delegar a leitura](../guias/leitura-e-operacao.md#delegar-a-leitura) |
+| Mais de ~20 páginas de imagem | Subagentes, em faixas sem sobreposição, pelos passos da skill `ler-acervo` |
 | O resto | A conversa principal |
 
 Dois elos são independentes quando nenhum espera o resultado do outro.

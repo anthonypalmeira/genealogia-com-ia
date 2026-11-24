@@ -13,6 +13,7 @@ Abra o guia quando a situação da linha aparecer:
 - [Leitura de imagem e operação](docs/guias/leitura-e-operacao.md): baixar e ler imagens, delegar páginas, registrar cobertura, fechar a conversa.
 - `garimpo --help`: a CLI do kit, para a sessão, a árvore, as buscas, as imagens, o digitarq e o desenho de uma linhagem (`garimpo diagrama`).
 - [Termos e riscos](docs/guias/termos-e-riscos.md): dúvida sobre o que um site permite; dados de pessoas vivas.
+- [Skills](skills/): o roteiro de cada situação, no `SKILL.md` da pasta: a nota de uma linhagem (`validar-linhagem`), os caminhos até um ancestral-alvo (`caminhos`), um elo fraco (`reforcar-elo`), um livro sem índice ou uma página a ler (`ler-acervo`), gravar na árvore (`gravar-fs`), um pedido em papel (`pedido`), um desenho (`diagrama`).
 - [Abertura](docs/skills/abertura.md) e [fechamento](docs/skills/fechamento.md): os passos comuns a toda skill, ao rodar ou escrever uma.
 - [Pasta de pesquisa](modelos/pesquisa/README.md): montar ou ler `pesquisa/`, a pasta do usuário.
 - [Ferramentas existentes](docs/pesquisa/ferramentas-existentes.md): antes de propor uma dependência ou uma integração.

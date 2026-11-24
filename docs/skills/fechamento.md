@@ -10,6 +10,7 @@ Os passos com que toda skill do kit termina, sem o usuário pedir.
    | Nome completo e ID | Criar fonte, anexar fonte ou criar nota | O que a pessoa tem hoje e o que passa a ter | O que o documento prova |
 
    - Antes de pôr uma fonte na tabela, confira com `garimpo fs fontes <ID>` que a pessoa ainda não a tem.
+   - Abaixo da tabela, mostre cada fonte e cada nota como vai ser gravada, pelos campos de [O que cada gravação leva](../../skills/gravar-fs/SKILL.md#o-que-cada-gravação-leva): o "sim" aprova o que foi mostrado.
    - Parentesco, fusão e fatos entram nos próximos passos, como pergunta para outra rodada.
    - O fechamento só propõe. Com o "sim" do usuário, a tabela aprovada passa à skill `gravar-fs`, que grava, relê e registra.
    - Sem o que gravar, escreva "Nada a gravar no FamilySearch".
