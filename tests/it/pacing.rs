@@ -26,7 +26,10 @@ fn after_a_429_it_waits_the_retry_after_and_completes_the_request() {
             Reply::recorded("person.json")
         }
     });
-    let env = TestEnv::new(&fs).with_var("GARIMPO_PAUSA_429_S", "0");
+    // The pause asked for is exactly the longest this command waits.
+    let env = TestEnv::new(&fs)
+        .with_var("GARIMPO_PAUSA_429_S", "0")
+        .with_var("GARIMPO_ESPERA_MAX_S", "1");
     env.deliver_session();
 
     let person = env.run(&PERSON);

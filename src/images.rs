@@ -279,7 +279,7 @@ pub(crate) fn part_path(file: &Path) -> PathBuf {
 
 /// What came of asking for one image.
 #[derive(Debug)]
-enum Fetched {
+pub(crate) enum Fetched {
     /// The image is in the folder.
     Image(Inspected),
     /// The account could not get the image, for this reason.
@@ -290,7 +290,7 @@ enum Fetched {
 /// transfers it from the signed address, when there is one, checks it and
 /// puts it in `file`, which only exists once the image is whole. A refusal
 /// of this one image, or something that is not an image, leaves it pending.
-fn keep(
+pub(crate) fn keep(
     transport: &Transport,
     asked: Result<Option<String>, Error>,
     file: &Path,

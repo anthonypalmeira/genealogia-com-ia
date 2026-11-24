@@ -210,3 +210,97 @@ fn every_search_is_recorded_and_the_coverage_tells_what_was_already_searched() {
         never.stderr
     );
 }
+
+#[test]
+fn a_search_made_outside_garimpo_is_recorded_and_found_like_any_other() {
+    let fs = FakeServer::start(|_| Reply::empty(500));
+    let env = TestEnv::new(&fs);
+
+    let recorded = env.run(&[
+        "cobertura",
+        "registrar",
+        "Arquivo Público Exemplo",
+        "inventário de Joaquim Exemplo",
+        "--resultado",
+        "negativo",
+        "--lugar",
+        "Vila Exemplo",
+        "--de",
+        "1840",
+        "--ate",
+        "1860",
+    ]);
+    let asked = env.run(&["cobertura", "consultar", "arquivo publico", "joaquim"]);
+
+    assert_eq!(recorded.code, 0, "{}", recorded.stderr);
+    let coverage = env.coverage();
+    assert_eq!(coverage.len(), 1);
+    let mut record = coverage[0].clone();
+    record.as_object_mut().unwrap().remove("quando").unwrap();
+    assert_eq!(
+        record,
+        json!({
+            "busca": "Arquivo Público Exemplo",
+            "consulta": "inventário de Joaquim Exemplo",
+            "lugar": "Vila Exemplo",
+            "de": 1840,
+            "ate": 1860,
+            "inicio": 0,
+            "total": null,
+            "vistos": 0,
+            "itens": [],
+            "resultado": "negativo",
+        })
+    );
+    // The line of the record, without its moment, is the one a query shows.
+    let fields: Vec<&str> = recorded.stdout.trim_end().split('\t').collect();
+    assert_eq!(
+        [&fields[..1], &fields[2..]].concat(),
+        [
+            "negativo",
+            "Arquivo Público Exemplo",
+            "inventário de Joaquim Exemplo",
+            "Vila Exemplo",
+            "1840-1860",
+            "0",
+            "-",
+        ]
+    );
+    assert_eq!(asked.stdout, recorded.stdout);
+    // Nothing was asked of any service.
+    assert_eq!(fs.requests().len(), 0);
+}
+
+#[test]
+fn a_search_outside_garimpo_is_only_recorded_with_what_tells_it_apart() {
+    let fs = FakeServer::start(|_| Reply::empty(500));
+    let env = TestEnv::new(&fs);
+    let pending = [
+        "cobertura",
+        "registrar",
+        "Hemeroteca Exemplo",
+        "Joaquim Exemplo",
+        "--resultado",
+        "pendente-de-acesso",
+    ];
+
+    let refused = env.run(&pending);
+    // A place named like a search of garimpo would pass for one.
+    let disguised = env.run(&[
+        "cobertura",
+        "registrar",
+        "catalogo",
+        "Vila Exemplo",
+        "--resultado",
+        "negativo",
+    ]);
+    let recorded = env.run(&[&pending[..], &["--motivo", "captcha"]].concat());
+
+    assert_eq!(refused.code, 2, "{}", refused.stderr);
+    assert_eq!(disguised.code, 2, "{}", disguised.stderr);
+    assert_eq!(recorded.code, 0, "{}", recorded.stderr);
+    let coverage = env.coverage();
+    assert_eq!(coverage.len(), 1);
+    assert_eq!(coverage[0]["resultado"], "pendente-de-acesso");
+    assert_eq!(coverage[0]["motivo"], "captcha");
+}

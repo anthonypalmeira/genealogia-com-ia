@@ -12,8 +12,9 @@ use std::{
 
 use anyhow::Context;
 use chrono::{SecondsFormat, Utc};
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Value, json};
 
 use crate::{
     cli::{Config, CoverageCommand},
@@ -22,21 +23,32 @@ use crate::{
     text,
 };
 
-/// What came of a search.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub(crate) enum Outcome {
+/// What came of a search. Also the value of `--resultado`, with the same
+/// names as in the log.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ValueEnum)]
+pub enum Outcome {
     /// Everything the search found was seen.
     #[serde(rename = "lido")]
+    #[value(name = "lido", help = "tudo o que a busca achou foi visto")]
     Read,
     /// There is more than what was seen: the search is still open.
     #[serde(rename = "parcial")]
+    #[value(
+        name = "parcial",
+        help = "há mais do que foi visto: a busca continua aberta"
+    )]
     Partial,
     /// The search found nothing.
     #[serde(rename = "negativo")]
+    #[value(name = "negativo", help = "a busca foi feita e não achou nada")]
     Negative,
     /// The search got no answer it could use, which says nothing about what
     /// exists.
     #[serde(rename = "pendente-de-acesso")]
+    #[value(
+        name = "pendente-de-acesso",
+        help = "a busca não teve resposta que sirva: não diz nada sobre o dado existir"
+    )]
     PendingAccess,
 }
 
@@ -62,8 +74,9 @@ impl fmt::Display for Outcome {
     }
 }
 
-/// The kind of a search: the command that made it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// The kind of a search: the command that made it or, for a search made
+/// outside `garimpo`, where it was made.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) enum Kind {
     #[serde(rename = "texto")]
     FullText,
@@ -89,6 +102,10 @@ pub(crate) enum Kind {
     DigitarqDownload,
     #[serde(rename = "digitarq-oai")]
     DigitarqOai,
+    /// The archive, the site or the book of a search made outside `garimpo`,
+    /// by its name.
+    #[serde(untagged)]
+    Elsewhere(String),
 }
 
 /// The name the kind has in the log.
@@ -196,7 +213,7 @@ impl Coverage {
         seen: Seen,
         outcome: Outcome,
     ) -> Result<(), Error> {
-        self.append(search, seen, outcome, None)
+        self.append(search, seen, outcome, None).map(drop)
     }
 
     /// Records what a failed search leaves behind. A search FamilySearch did
@@ -211,7 +228,7 @@ impl Coverage {
         seen: Seen,
         error: &Error,
     ) -> Result<(), Error> {
-        match error {
+        let recorded = match error {
             Error::Blocked { .. }
             | Error::Restricted { .. }
             | Error::Paused { .. }
@@ -236,16 +253,18 @@ impl Coverage {
                 }
                 self.append(search, seen, Outcome::Partial, None)
             }
-        }
+        };
+        recorded.map(drop)
     }
 
+    /// Writes one line of the log and returns it.
     fn append(
         &mut self,
         search: Search,
         seen: Seen,
         outcome: Outcome,
         reason: Option<String>,
-    ) -> Result<(), Error> {
+    ) -> Result<Record, Error> {
         let record = Record {
             when: Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true),
             search,
@@ -265,7 +284,7 @@ impl Coverage {
                     self.path.display()
                 )
             })?;
-        Ok(())
+        Ok(record)
     }
 }
 
@@ -341,8 +360,48 @@ pub(crate) fn report(
 
 /// Runs a command of the `cobertura` group.
 pub(crate) fn run(config: &Config, command: &CoverageCommand) -> Result<(), Error> {
-    let CoverageCommand::Query { terms, coverage } = command;
-    let path = &coverage.log;
+    match command {
+        CoverageCommand::Query { terms, coverage } => query(config, terms, &coverage.log),
+        CoverageCommand::Record {
+            source,
+            query,
+            outcome,
+            place,
+            from,
+            to,
+            seen,
+            total,
+            reason,
+            coverage,
+        } => {
+            // The name is read as the log reads it back: a place named like
+            // a command would pass for a search of garimpo.
+            let Ok(kind @ Kind::Elsewhere(_)) = serde_json::from_value(json!(source)) else {
+                return Err(Error::Input(format!(
+                    "`{source}` é o nome de uma busca do próprio garimpo: diga onde a busca \
+                     foi feita, como o nome do arquivo, do site ou do livro"
+                )));
+            };
+            let search = Search {
+                place: place.clone(),
+                from: *from,
+                to: *to,
+                ..Search::new(kind, query.clone())
+            };
+            let seen = Seen {
+                total: *total,
+                count: *seen,
+                ..Seen::default()
+            };
+            let record =
+                Coverage::open(&coverage.log)?.append(search, seen, *outcome, reason.clone())?;
+            print(config, &record)
+        }
+    }
+}
+
+/// Prints the searches of the log that hold every term.
+fn query(config: &Config, terms: &[String], path: &Path) -> Result<(), Error> {
     let context = || {
         format!(
             "não consegui ler o registro de cobertura {}",
@@ -359,12 +418,7 @@ pub(crate) fn run(config: &Config, command: &CoverageCommand) -> Result<(), Erro
     for line in log.lines() {
         let record: Record = serde_json::from_str(line).with_context(context)?;
         let Search {
-            kind,
-            query,
-            place,
-            from,
-            to,
-            ..
+            kind, query, place, ..
         } = &record.search;
         let file = record.seen.file.as_ref().map(|file| file.display());
         let searched = format!(
@@ -376,24 +430,7 @@ pub(crate) fn run(config: &Config, command: &CoverageCommand) -> Result<(), Erro
             continue;
         }
         found += 1;
-        let year = |year: Option<u16>| year.map(|year| year.to_string()).unwrap_or_default();
-        let years = if from.is_some() || to.is_some() {
-            Some(format!("{}-{}", year(*from), year(*to)))
-        } else {
-            None
-        };
-        let short = [
-            record.outcome.to_string(),
-            record.when.clone(),
-            field(Some(kind)),
-            field(Some(query)),
-            field(place.as_ref()),
-            field(years),
-            record.seen.count.to_string(),
-            field(record.seen.total),
-        ]
-        .join("\t");
-        config.print(&short, &record)?;
+        print(config, &record)?;
     }
     if found == 0 {
         eprintln!(
@@ -402,4 +439,35 @@ pub(crate) fn run(config: &Config, command: &CoverageCommand) -> Result<(), Erro
         );
     }
     Ok(())
+}
+
+/// Prints one search of the log: outcome, moment, kind, query, place, years,
+/// items seen and total.
+fn print(config: &Config, record: &Record) -> Result<(), Error> {
+    let Search {
+        kind,
+        query,
+        place,
+        from,
+        to,
+        ..
+    } = &record.search;
+    let year = |year: Option<u16>| year.map(|year| year.to_string()).unwrap_or_default();
+    let years = if from.is_some() || to.is_some() {
+        Some(format!("{}-{}", year(*from), year(*to)))
+    } else {
+        None
+    };
+    let short = [
+        record.outcome.to_string(),
+        record.when.clone(),
+        field(Some(kind)),
+        field(Some(query)),
+        field(place.as_ref()),
+        field(years),
+        record.seen.count.to_string(),
+        field(record.seen.total),
+    ]
+    .join("\t");
+    config.print(&short, record)
 }

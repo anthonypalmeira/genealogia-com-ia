@@ -39,6 +39,9 @@ enum Call<'a> {
     Get,
     /// A POST to the official API.
     Post(&'a Value),
+    /// A GET to the official API for the portrait of a person, answered with
+    /// a redirect to the image.
+    Portrait,
     /// A GET to the website, made inside the logged tab while the browser
     /// bridge is open.
     SiteGet,
@@ -51,7 +54,9 @@ enum Call<'a> {
 impl Call<'_> {
     fn method(self) -> &'static str {
         match self {
-            Self::Get | Self::SiteGet | Self::StorageGet | Self::Download(_) => "GET",
+            Self::Get | Self::Portrait | Self::SiteGet | Self::StorageGet | Self::Download(_) => {
+                "GET"
+            }
             Self::Post(_) => "POST",
         }
     }
@@ -147,11 +152,18 @@ impl<'a> Transport<'a> {
         Ok(self.send(Call::Download(into), path)?.location)
     }
 
-    /// Stores what the signed address of a full image holds in `into`. The
-    /// signature is the credential, so the session does not go along, and
-    /// the address never goes into an error message.
-    pub(crate) fn transfer(&self, signed: &str, into: &Path) -> Result<(), Error> {
-        let mut response = self.agent.get(signed).call().map_err(|error| {
+    /// Asks for the portrait of a person. The answer is the address of the
+    /// image, for [`Self::transfer`], or `None` when the person has none.
+    pub(crate) fn ask_portrait(&self, path: &str) -> Result<Option<String>, Error> {
+        Ok(self.send(Call::Portrait, path)?.location)
+    }
+
+    /// Stores what the address of an image holds in `into`: the signed
+    /// address of a full image, or the address of a portrait. The address is
+    /// the credential, so the session does not go along, and the address
+    /// never goes into an error message.
+    pub(crate) fn transfer(&self, address: &str, into: &Path) -> Result<(), Error> {
+        let mut response = self.agent.get(address).call().map_err(|error| {
             let cause = match error {
                 ureq::Error::Timeout(_) => "o tempo esgotou".to_owned(),
                 ureq::Error::Io(error) => error.to_string(),
@@ -189,6 +201,7 @@ impl<'a> Transport<'a> {
                 Call::SiteGet if bridge::is_open(&self.config.dir) => Way::Tab,
                 Call::Get
                 | Call::Post(_)
+                | Call::Portrait
                 | Call::SiteGet
                 | Call::StorageGet
                 | Call::Download(_) => Way::Direct(self.token()?),
@@ -205,7 +218,10 @@ impl<'a> Transport<'a> {
                 Err(Error::SessionCap { .. }) if attempt > 0 => return Err(blocked()),
                 wait => wait?,
             };
-            if wait > Duration::from_secs(self.config.max_wait_s) {
+            // A pause counts from the millisecond after the answer, so one
+            // of exactly the longest wait shows as a millisecond more.
+            let longest = Duration::from_secs(self.config.max_wait_s);
+            if wait > longest.saturating_add(Duration::from_millis(1)) {
                 return Err(Error::Paused {
                     seconds: wait.as_secs(),
                 });
@@ -259,8 +275,9 @@ impl<'a> Transport<'a> {
                 }
                 // A redirect to the storage is a full image on its way, and
                 // full images are what gets an account paused: the next
-                // request waits the interval.
-                (300..=399, Call::Download(_)) => {
+                // request waits the interval. So does the one after the
+                // redirect to a portrait, whose transfer is not counted either.
+                (300..=399, Call::Download(_)) | (307, Call::Portrait) => {
                     let interval = Duration::from_millis(self.config.image_interval_ms);
                     Some(asked.unwrap_or_default().max(interval))
                 }
@@ -279,9 +296,17 @@ impl<'a> Transport<'a> {
                         Body::Read(text) => text,
                         Body::Lost => return Err(unread("a aba não leu o corpo").into()),
                         Body::Unread(mut body) => match call {
+                            // A person with no portrait answers 204. Anything
+                            // else must not pass for that.
+                            Call::Portrait if status != 204 => {
+                                return Err(anyhow!(
+                                    "o FamilySearch respondeu {status} em {method} {path}"
+                                )
+                                .into());
+                            }
                             // Only what a GET read is used; a POST is told by
                             // its status and `Location`.
-                            Call::Post(_) => String::new(),
+                            Call::Post(_) | Call::Portrait => String::new(),
                             Call::Get | Call::SiteGet | Call::StorageGet => {
                                 body.read_to_string()
                                     .map_err(|error| unread(&error.to_string()))?
@@ -303,16 +328,24 @@ impl<'a> Transport<'a> {
                 // Redirects are not followed: a hidden second request would skip
                 // the regulator.
                 300..=399 => {
-                    let to = location.as_deref().unwrap_or("outro endereço");
-                    return match call {
-                        // The one redirect that is followed, by `download`,
-                        // once this request is counted.
-                        Call::Download(_) if location.is_some() => Ok(Response {
+                    // The redirects that are followed, by the caller, once
+                    // this request is counted: to a full image and, with a
+                    // 307, to a portrait.
+                    let followed = match call {
+                        Call::Download(_) => true,
+                        Call::Portrait => status == 307,
+                        Call::Get | Call::Post(_) | Call::SiteGet | Call::StorageGet => false,
+                    };
+                    if followed && location.is_some() {
+                        return Ok(Response {
                             body: String::new(),
                             location,
-                        }),
+                        });
+                    }
+                    let to = location.as_deref().unwrap_or("outro endereço");
+                    return match call {
                         // A merged person answers with one.
-                        Call::Get | Call::Post(_) => Err(Error::Input(format!(
+                        Call::Get | Call::Post(_) | Call::Portrait => Err(Error::Input(format!(
                             "{path} mudou para {to} ({status}); a pessoa pode ter sido \
                              fundida em outra: repita com o id novo"
                         ))),
@@ -400,7 +433,7 @@ impl<'a> Transport<'a> {
     /// Makes the request from this process, with the held session.
     fn direct(&self, call: Call, token: &Token, path: &str) -> Result<Exchange, Error> {
         let (base, accept) = match call {
-            Call::Get | Call::Post(_) => (&self.config.fs_api, MEDIA_TYPE),
+            Call::Get | Call::Post(_) | Call::Portrait => (&self.config.fs_api, MEDIA_TYPE),
             Call::SiteGet => (&self.config.fs_site, SITE_MEDIA_TYPE),
             Call::StorageGet => (&self.config.fs_images, SITE_MEDIA_TYPE),
             Call::Download(_) => (&self.config.fs_images, "image/*"),
@@ -408,12 +441,13 @@ impl<'a> Transport<'a> {
         let url = format!("{base}{path}");
         let authorization = format!("Bearer {}", token.as_str());
         let sent = match call {
-            Call::Get | Call::SiteGet | Call::StorageGet | Call::Download(_) => self
-                .agent
-                .get(&url)
-                .header("Authorization", &authorization)
-                .header("Accept", accept)
-                .call(),
+            Call::Get | Call::Portrait | Call::SiteGet | Call::StorageGet | Call::Download(_) => {
+                self.agent
+                    .get(&url)
+                    .header("Authorization", &authorization)
+                    .header("Accept", accept)
+                    .call()
+            }
             Call::Post(body) => self
                 .agent
                 .post(&url)

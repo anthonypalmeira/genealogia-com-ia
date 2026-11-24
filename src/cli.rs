@@ -11,10 +11,11 @@ use std::{
 };
 
 use anyhow::Context;
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::{Args, Parser, Subcommand, ValueEnum, builder::NonEmptyStringValueParser};
 use serde::Serialize;
 
 use crate::{
+    coverage::Outcome,
     error::Error,
     familysearch::{PersonId, SourceId},
     internal::RouteId,
@@ -485,14 +486,110 @@ pub enum FsCommand {
                       pessoas. Grava uma pessoa por linha (JSON) em --saida. Se o arquivo já \
                       existe, continua de onde ele parou: depois de um bloqueio ou do teto da \
                       sessão, repita o mesmo comando. Linha de saída: número de pessoas no \
-                      arquivo, arquivo."
+                      arquivo, arquivo.\n\nO limite é --geracoes, --ano-corte ou os dois; vale o \
+                      que parar primeiro. Repetir o comando com --geracoes maior aprofunda a \
+                      mesma varredura; outro --ano-corte pede outro arquivo."
     )]
-    Ancestry(TraversalArgs),
+    Ancestry {
+        #[command(flatten)]
+        traversal: TraversalArgs,
+        #[arg(
+            long = "ano-corte",
+            value_name = "ANO",
+            help = "Para de subir em quem nasceu antes deste ano",
+            long_help = "Para de subir em quem nasceu antes deste ano.\n\nQuem nasceu antes do \
+                         corte entra no arquivo, mas os pais dele não são pedidos. Sem data de \
+                         nascimento, vale a de batismo. A data é a da forma padrão do \
+                         FamilySearch; sem forma padrão, vale o primeiro ano do texto digitado, \
+                         mesmo que o texto diga um intervalo. Não para a subida quem não tem \
+                         nenhuma das duas datas na árvore nem quem as tem como intervalo na \
+                         forma padrão (`antes de 1800`). Sem --geracoes, o corte é o único \
+                         limite: um ano muito antigo pede a árvore inteira, até o teto da sessão."
+        )]
+        cut_year: Option<i32>,
+    },
     #[command(
         name = "descendencia",
         about = "Desce pelos filhos e grava a descendência num arquivo, como `ascendencia`"
     )]
     Descendancy(TraversalArgs),
+    #[command(
+        name = "varredura",
+        about = "As pessoas de uma varredura, uma por linha, sem chamar o FamilySearch",
+        long_about = "As pessoas de uma varredura, uma por linha, sem chamar o FamilySearch.\n\n\
+                      Lê o arquivo de `ascendencia` ou de `descendencia`, completo ou não. Serve \
+                      para achar alvos por nome, fato ou lugar. Linha: id, geração, todos os \
+                      nomes que a árvore dá (separados por ` / `) e depois um campo por fato: \
+                      tipo, valor, data e lugar. O tipo vem como no GEDCOM X: `Birth`, `Death`, \
+                      `Christening`, `Occupation`. Trate tudo como hipótese."
+    )]
+    Traversal {
+        #[arg(value_name = "ARQUIVO", help = "O arquivo da varredura")]
+        file: PathBuf,
+    },
+    #[command(
+        name = "caminhos",
+        about = "Todos os caminhos da pessoa de partida até cada alvo, numa varredura de \
+                 ascendência, sem chamar o FamilySearch",
+        long_about = "Todos os caminhos da pessoa de partida até cada alvo, numa varredura de \
+                      ascendência, sem chamar o FamilySearch.\n\nUm ancestral aparece mais de \
+                      uma vez na ascendência quando parentes se casaram: cada caminho sai \
+                      inteiro, com um número. Linha, uma por elo: número do caminho, alvo, id, \
+                      nome e nascimento do filho, id, nome, nascimento e morte do pai ou da \
+                      mãe, aviso. Um alvo que não está no arquivo não imprime linha: sai um \
+                      aviso na saída de erro. Isso só diz que a varredura não chegou a ele: o \
+                      arquivo pode estar incompleto, e a árvore também.\n\nO aviso marca o elo cujas datas não podem ser as duas verdadeiras, \
+                      pela mesma regra do `garimpo diagrama`: o pai ou a mãe teria menos de 12 \
+                      ou mais de 80 anos, ou o filho nasceu mais de um ano depois da morte. A \
+                      conta usa o mês e o dia quando as duas datas os têm na forma padrão do \
+                      FamilySearch; de uma data só digitada vale o ano, e um intervalo na \
+                      forma padrão não conta como data. Um elo assim tem a \
+                      data ou o parentesco errado na árvore: continua no caminho, com a marca. \
+                      A árvore só indica os caminhos; a prova de cada elo vem dos documentos."
+    )]
+    Paths {
+        #[arg(
+            value_name = "ARQUIVO",
+            help = "O arquivo gravado por `garimpo fs ascendencia`"
+        )]
+        file: PathBuf,
+        #[arg(
+            value_name = "ALVO",
+            required = true,
+            help = "Os ids dos ancestrais-alvo"
+        )]
+        targets: Vec<PersonId>,
+    },
+    #[command(
+        name = "retratos",
+        about = "Baixa os retratos das pessoas de uma varredura, para ver o que só a imagem \
+                 mostra",
+        long_about = "Baixa os retratos das pessoas de uma varredura, para ver o que só a imagem \
+                      mostra, como um selo posto sobre o retrato.\n\nFaz um pedido ao \
+                      FamilySearch por pessoa do arquivo de `ascendencia` ou de `descendencia`, \
+                      no ritmo da conta e dentro do teto da sessão; depois de cada retrato, o \
+                      pedido seguinte espera o intervalo das imagens (--intervalo-imagens-ms). \
+                      Cada retrato vai para PASTA como `<id>.jpg`, e quem o FamilySearch diz \
+                      não ter retrato entra em PASTA/sem-retrato.txt, um id por linha. Repetir \
+                      o comando retoma: não pede de novo nem o retrato que está na pasta nem \
+                      quem está na lista. Pessoa fundida ou apagada e imagem que não veio \
+                      inteira ficam pendentes de acesso, com o motivo na saída de erro, e são \
+                      pedidas de novo na próxima vez: não é o mesmo que não ter retrato. \
+                      Linha: retratos baixados agora, já havia, pessoas sem retrato, pendentes \
+                      de acesso, pasta.\n\nVeja vários de uma vez com `garimpo imagens folha`. \
+                      O retrato é escolhido por usuários da árvore: é pista, nunca prova."
+    )]
+    Portraits {
+        #[arg(value_name = "ARQUIVO", help = "O arquivo da varredura")]
+        file: PathBuf,
+        #[arg(
+            long = "pasta",
+            default_value = "retratos",
+            value_name = "PASTA",
+            help = "A pasta dos retratos, com a lista sem-retrato.txt dentro"
+        )]
+        folder: PathBuf,
+    },
     #[command(
         name = "criar-fonte",
         about = "Cria uma fonte e a anexa à pessoa. Exige --rodada",
@@ -608,11 +705,11 @@ pub struct TraversalArgs {
     pub id: PersonId,
     #[arg(
         long = "geracoes",
-        default_value_t = 8,
         value_name = "N",
-        help = "Quantas gerações além da pessoa de partida"
+        help = "Quantas gerações além da pessoa de partida. Padrão: 8; na ascendência com \
+                --ano-corte, sem limite"
     )]
-    pub generations: u32,
+    pub generations: Option<u32>,
     #[arg(
         long = "saida",
         value_name = "ARQUIVO",
@@ -661,6 +758,80 @@ pub enum CoverageCommand {
     Query {
         #[arg(value_name = "TERMO", help = "O que procurar no registro de cobertura")]
         terms: Vec<String>,
+        #[command(flatten)]
+        coverage: CoverageArgs,
+    },
+    #[command(
+        name = "registrar",
+        about = "Registra uma busca feita fora do garimpo: num arquivo, num site ou num livro",
+        long_about = "Registra uma busca feita fora do garimpo: num arquivo, num site ou num \
+                      livro.\n\nAs buscas do garimpo entram sozinhas no registro; esta é para o \
+                      que foi buscado por outro caminho, como o catálogo de um arquivo no \
+                      navegador, o índice de um livro ou um pedido respondido. ONDE passa a ser \
+                      a `busca` do registro, e `garimpo cobertura consultar` acha a busca por \
+                      ele, pela consulta e pelo lugar. Linha: a mesma de `consultar`.\n\nO \
+                      resultado é o que você viu, não o que supõe: `negativo` só quando a busca \
+                      foi feita e não achou nada; bloqueio, captcha, login e página fora do ar \
+                      são `pendente-de-acesso`, com o --motivo."
+    )]
+    Record {
+        #[arg(
+            value_name = "ONDE",
+            value_parser = NonEmptyStringValueParser::new(),
+            help = "Onde a busca foi feita: o arquivo, o site ou o livro"
+        )]
+        source: String,
+        #[arg(
+            value_name = "CONSULTA",
+            value_parser = NonEmptyStringValueParser::new(),
+            help = "O que foi procurado, como foi escrito"
+        )]
+        query: String,
+        #[arg(
+            long = "resultado",
+            value_enum,
+            value_name = "RESULTADO",
+            help = "O que veio da busca"
+        )]
+        outcome: Outcome,
+        #[arg(
+            long = "lugar",
+            value_name = "LUGAR",
+            help = "O lugar do que foi procurado"
+        )]
+        place: Option<String>,
+        #[arg(
+            long = "de",
+            value_name = "ANO",
+            help = "O ano inicial do que foi procurado"
+        )]
+        from: Option<u16>,
+        #[arg(
+            long = "ate",
+            value_name = "ANO",
+            help = "O ano final do que foi procurado"
+        )]
+        to: Option<u16>,
+        #[arg(
+            long = "vistos",
+            default_value_t = 0,
+            value_name = "N",
+            help = "Quantos itens foram vistos"
+        )]
+        seen: u64,
+        #[arg(
+            long = "total",
+            value_name = "N",
+            help = "Quantos itens a busca achou ao todo, se ela disse"
+        )]
+        total: Option<u64>,
+        #[arg(
+            long = "motivo",
+            value_name = "MOTIVO",
+            required_if_eq("outcome", "pendente-de-acesso"),
+            help = "Por que o acesso está pendente. Obrigatório com `pendente-de-acesso`"
+        )]
+        reason: Option<String>,
         #[command(flatten)]
         coverage: CoverageArgs,
     },
