@@ -1,0 +1,8 @@
+{
+  "name": "genealogia-com-ia",
+  "description": "Skills e guias para pesquisar genealogia com agentes de IA, com foco no Brasil.",
+  "author": { "name": "Autores do genealogia-com-ia" },
+  "homepage": "https://github.com/anthonypalmeira/genealogia-com-ia",
+  "repository": "https://github.com/anthonypalmeira/genealogia-com-ia",
+  "license": "MIT AND CC-BY-4.0"
+}
