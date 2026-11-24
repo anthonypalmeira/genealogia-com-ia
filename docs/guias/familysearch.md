@@ -69,6 +69,32 @@ O que já está na árvore é hipótese. Exemplos vistos: título de fonte que e
 
 A resolução do `dist.jpg` é a maior guardada **daquele filme** e varia de cerca de 1.400 px a 4.300 px. Pouca resolução não é motivo para parar: baixe o original, corte em metades e amplie.
 
+## Buscas com o `garimpo`
+
+O grupo `garimpo busca` usa as rotas internas descritas acima: registros indexados, texto completo, catálogo e *waypoints*. A ajuda de cada comando (`garimpo busca <comando> --help`) diz o que cada linha da saída traz.
+
+| Comando | Uso |
+|---|---|
+| `garimpo busca texto` | Texto completo. `--frase "nome completo"` escreve a frase obrigatória, sem acentos; `--lugar`, `--de`, `--ate` e `--grupo` restringem |
+| `garimpo busca grupo <grupo> --saida <arquivo>` | Puxa a transcrição do grupo inteiro: não repete páginas, para no total e retoma do arquivo depois de um bloqueio ou do teto |
+| `garimpo busca nomes <arquivo> <nome>…` | Procura nomes e palavras de parentesco no grupo puxado, sem chamar o FamilySearch |
+| `garimpo busca registros` | Registros indexados: `--nome`, `--sobrenome`, `--pai`, `--mae`, `--conjuge`, `--lugar`, `--de`, `--ate`; `--exigir` torna os termos obrigatórios |
+| `garimpo busca catalogo` | Catálogo, por `--lugar`, `--titulo` ou `--palavras` |
+| `garimpo busca catalogo-item <id>` | Um item do catálogo com os filmes, o grupo de imagens de cada um e se está aberto ou restrito |
+| `garimpo busca waypoints <coleção> [waypoint]` | Desce pelos níveis de uma coleção sem índice até as imagens, em ordem |
+
+**Cobertura.** Toda busca entra sozinha no registro de cobertura (`--cobertura`, por padrão `cobertura.jsonl` na pasta em que o comando roda): a consulta, o lugar, os anos, o total, os itens vistos e o resultado. O resultado é `lido` (tudo visto), `parcial` (há mais do que foi visto: a busca continua aberta), `negativo` (não achou nada) ou `pendente-de-acesso`. Um bloqueio (403, 429) ou uma falha do servidor entra como `pendente-de-acesso`, com o motivo, nunca como `negativo`. Antes de buscar, pergunte: `garimpo cobertura consultar <termos>` mostra o que já foi buscado e com que resultado; nenhuma linha quer dizer "nunca buscado".
+
+**Ponte do navegador.** As rotas `/service/search/…` recusam fora da aba, e o `garimpo` não se disfarça de navegador:
+
+1. `garimpo ponte abrir` imprime um trecho de JavaScript.
+2. Avalie o trecho uma vez na aba logada em `www.familysearch.org`. Ele responde `ligada` na hora e segue atendendo em segundo plano.
+3. Confira com `garimpo ponte estado` e use o grupo `busca` normalmente: com a ponte aberta, os mesmos comandos passam pela aba, no mesmo ritmo e com o mesmo teto.
+
+Pronto quando `garimpo ponte estado` responde `ponte ligada`. Se a aba navegar ou fechar, o comando sai com 7: avalie o trecho de novo. O token não sai da aba. O motivo do desenho está no [ADR 0001](../adr/0001-ponte-do-navegador-por-processo-local.md).
+
+**Desligar.** `GARIMPO_ROTAS_INTERNAS=desligadas` (ou `--rotas-internas desligadas`) desliga o grupo `busca` inteiro: o `garimpo` fica só nas rotas oficiais.
+
 ## Memórias e retratos
 
 - `/platform/tree/persons/{id}/memories` lista as memórias da pessoa. Certidões de inteiro teor enviadas por parentes deram muitas provas A.

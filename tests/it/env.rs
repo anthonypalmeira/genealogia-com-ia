@@ -10,6 +10,8 @@ use std::{
     sync::atomic::{AtomicU32, Ordering},
 };
 
+use serde_json::Value;
+
 use crate::server::FakeServer;
 
 /// Synthetic: no real token ever enters the tests.
@@ -74,6 +76,16 @@ impl TestEnv {
         &self.work_dir
     }
 
+    /// The coverage log the searches of this environment write, one record
+    /// per line.
+    pub(crate) fn coverage(&self) -> Vec<Value> {
+        fs::read_to_string(self.work_dir.join("cobertura.jsonl"))
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect()
+    }
+
     pub(crate) fn command(&self, args: &[&str]) -> Command {
         let mut command = Command::new(env!("CARGO_BIN_EXE_garimpo"));
         command
@@ -83,6 +95,7 @@ impl TestEnv {
             .env("GARIMPO_DIR", &self.state_dir)
             .env("GARIMPO_FS_API", &self.api)
             .env("GARIMPO_FS_IDENT", &self.api)
+            .env("GARIMPO_FS_SITE", &self.api)
             // So coverage also measures the binary, when it is on.
             .envs(env::var_os("LLVM_PROFILE_FILE").map(|profile| ("LLVM_PROFILE_FILE", profile)))
             .envs(self.extra.iter().map(|(name, value)| (name, value)))
@@ -116,10 +129,11 @@ impl TestEnv {
 
 impl Drop for TestEnv {
     fn drop(&mut self) {
-        // Ends the process that holds the session, if there is one. This runs
-        // while a failed test unwinds too, so it must not panic; the result
-        // does not matter because the test is already over.
+        // Ends the processes that hold the session and the bridge, if there
+        // are any. This runs while a failed test unwinds too, so it must not
+        // panic; the result does not matter because the test is already over.
         let _ = self.command(&["sessao", "encerrar"]).output();
+        let _ = self.command(&["ponte", "fechar"]).output();
         // Cleanup: a leftover temporary directory does not invalidate the test.
         let _ = fs::remove_dir_all(&self.state_dir);
         let _ = fs::remove_dir_all(&self.work_dir);

@@ -76,7 +76,7 @@ Escolher quais documentos e páginas entram num relatório é decisão do autor.
 
 ### Cobertura
 
-Registre cada busca: a consulta, o lugar, os anos, o total, os itens vistos e o resultado. Os resultados possíveis são **lido**, **negativo** e **pendente de acesso**. Leia todos os resultados de uma busca antes de dá-la como negativa: a paginação repete, e uma busca lida pela metade continua aberta, com os itens vistos anotados.
+Registre cada busca: a consulta, o lugar, os anos, o total, os itens vistos e o resultado. Os resultados possíveis são **lido**, **negativo** e **pendente de acesso**. Leia todos os resultados de uma busca antes de dá-la como negativa: a paginação repete, e uma busca lida pela metade continua aberta, com os itens vistos anotados. O `garimpo` grava essa busca aberta como `parcial`.
 
 Antes de buscar, pergunte à cobertura se aquilo já foi buscado. Nas sessões, o mesmo catálogo vazio foi consultado em quatro conversas.
 

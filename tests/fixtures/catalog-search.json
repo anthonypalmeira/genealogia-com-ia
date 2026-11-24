@@ -1,0 +1,31 @@
+{
+ "searchHits": [
+  {
+   "metadataHit": {
+    "metadata": {
+     "creator": [
+      "Igreja Católica. Paróquia Sintética (Vila Exemplo)"
+     ],
+     "identifier": {
+      "value": "https://www.familysearch.org/service/search/catalog/item/olib:9990002"
+     },
+     "repositoryCalls": [
+      {
+       "title": "Online"
+      }
+     ],
+     "title": [
+      {
+       "value": "Vila Exemplo, registros paroquiais, 1750-1900",
+       "lang": "pt"
+      }
+     ]
+    },
+    "score": 1.0
+   }
+  }
+ ],
+ "facets": [],
+ "offset": 0,
+ "totalHits": 1
+}

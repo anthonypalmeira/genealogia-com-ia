@@ -360,7 +360,8 @@ fn person_line(person: &Person) -> String {
 }
 
 /// One field of a short line: no TAB or line break, and `-` when empty.
-fn field(value: Option<impl fmt::Display>) -> String {
+#[must_use = "the field is only useful inside a line"]
+pub(crate) fn field(value: Option<impl fmt::Display>) -> String {
     let clean = value
         .map(|value| value.to_string())
         .unwrap_or_default()

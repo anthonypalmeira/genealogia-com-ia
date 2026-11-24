@@ -10,8 +10,12 @@
 mod env;
 mod server;
 
+mod bridge;
+mod coverage;
+mod group;
 mod pacing;
 mod read;
+mod search;
 mod session;
 mod traversal;
 mod write;
