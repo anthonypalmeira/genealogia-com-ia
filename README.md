@@ -42,7 +42,7 @@ cargo install --path .       # o binário garimpo
 garimpo --help
 ```
 
-A skill `caminhos` usa também o `jq`. O desenho em SVG (`garimpo diagrama --formato svg`) é opcional e usa o `bun` e o Pele. Instale uma vez, na pasta do kit: `cd svg && bun install --frozen-lockfile`. O Mermaid e o texto não precisam de nada disso.
+O desenho em SVG (`garimpo diagrama --formato svg`) é opcional e usa o `bun` e o Pele. Instale uma vez, na pasta do kit: `cd svg && bun install --frozen-lockfile`. O Mermaid e o texto não precisam de nada disso.
 
 ## Aviso: FamilySearch e os riscos de uso
 

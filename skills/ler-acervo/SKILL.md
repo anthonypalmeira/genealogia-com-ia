@@ -22,7 +22,7 @@ Lê um acervo inteiro e deixa escrito, página por página, o que foi coberto. C
    | Edições impressas | A série impressa ou a transcrição publicada do mesmo fundo, com OCR |
    | Fichas do arquivo | O catálogo e as fichas do arquivo dono. As fichas de microfilmagem e o índice do próprio livro estão no filme: aparecem no mapa do passo 4 |
 
-   Crie antes a pasta do filme, com `mkdir -p pesquisa/imagens/<grupo>`. Passe `--cobertura pesquisa/cobertura.jsonl` às buscas do `garimpo`; as outras ganham uma linha em Cobertura fora do `garimpo`, no estado do elo.
+   Crie antes a pasta do filme, com `mkdir -p pesquisa/imagens/<grupo>`. Passe `--cobertura pesquisa/cobertura.jsonl` às buscas do `garimpo`; as outras [entram no mesmo registro](../../modelos/pesquisa/README.md#registrar-na-cobertura).
 
    A varredura do livro inteiro só se troca pelas páginas que um índice aponta quando esse índice cobre o livro inteiro e acha todos os alvos. Em qualquer outro caso ela segue inteira: o acerto de um índice parcial, como o texto completo e os registros indexados, diz por onde começar, e o índice que não acha um alvo não diz que ele falta.
 
@@ -64,7 +64,7 @@ Lê um acervo inteiro e deixa escrito, página por página, o que foi coberto. C
    Pronto quando cada imagem das faixas tem uma linha no arquivo de leitura.
 8. **Leia às cegas a palavra decisiva** de cada achado que vai ser usado: a filiação, o sobrenome, o ano. Um subagente recebe só o recorte e o layout, pelo briefing de [leitura às cegas](briefing.md#leitura-às-cegas), sem os nomes esperados, e devolve a transcrição com as leituras alternativas. Pronto quando cada achado tem uma leitura feita sem os nomes e as alternativas dela no arquivo de leitura.
 9. **Releia só os achados** na conversa principal: o recorte decisivo, de 1 a 3 imagens por achado. Compare a varredura, a leitura às cegas e a sua. O que concorda ganha a etiqueta [V]; o que diverge fica registrado como divergência, com as três leituras. Pronto quando cada achado está confirmado, divergente ou ilegível.
-10. **Registre a cobertura** no estado de cada elo servido, em Cobertura fora do `garimpo`: uma linha por faixa lida. O resultado é `lido` quando toda página tem `lido` ou `sem alvo`, e `parcial`, com as contagens, quando há página ilegível ou pendente de acesso. A página repetida conta pelo resultado da página a que remete. A linha aponta o arquivo de leitura. Cada página `ilegível` segue [Quando um assento não se lê](../../docs/guias/leitura-e-operacao.md#quando-um-assento-não-se-lê). Pronto quando toda página das faixas escolhidas está contada numa linha de cobertura.
+10. **Registre a cobertura**, uma linha por faixa lida, pela receita de [Registrar na cobertura](../../modelos/pesquisa/README.md#registrar-na-cobertura). O resultado é `lido` quando toda página tem `lido` ou `sem alvo`, e `parcial` quando há página ilegível ou pendente de acesso; as páginas lidas e as da faixa vão em `--vistos` e `--total`. A página repetida conta pelo resultado da página a que remete. Cada página `ilegível` segue [Quando um assento não se lê](../../docs/guias/leitura-e-operacao.md#quando-um-assento-não-se-lê). Pronto quando toda página das faixas escolhidas está contada numa linha de cobertura.
 11. **Feche** pelo [fechamento comum](../../docs/skills/fechamento.md).
 
 ## Um catálogo
@@ -79,6 +79,6 @@ O pedido de ler uma imagem ou um assento é o mesmo roteiro, encurtado. Entre a 
 2. Use a imagem que o usuário anexou, salva numa pasta de `pesquisa/imagens/` sem nome de pessoa; sem ela, baixe a página (passo 5).
 3. A leitura às cegas (passo 8) transcreve inteiro o assento pedido ou, quando o pedido é a página, cada assento dela. A transcrição vai para o relatório da conversa.
 4. Na releitura (passo 9), compare a leitura às cegas com a sua e com os alvos.
-5. A linha de cobertura (passo 10) leva o resultado da página: `lido`, `sem alvo` ou `ilegível`.
+5. Registre a cobertura (passo 10), com a página como faixa e o relatório como arquivo de leitura.
 
 Pronto quando a página tem o resultado e cada assento lido está confirmado ou divergente, com as duas leituras no relatório.

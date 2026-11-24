@@ -22,12 +22,6 @@ identidade: ∅
 
 <"Nenhuma", ou: filiação ou identidade, a nota da régua, a nota decidida, o motivo e a data.>
 
-## Cobertura fora do `garimpo`
-
-| Data | Onde | Consulta ou faixa de imagens | Resultado | Vistos e total, ou motivo |
-|---|---|---|---|---|
-| <AAAA-MM-DD> | <arquivo, coleção ou filme> | <o que foi procurado> | <`lido`, `parcial`, `negativo` ou `pendente-de-acesso`> | <quantos itens vistos de quantos; o bloqueio> |
-
 ## Conversas abertas
 
 | Desde | Conversa | O que faz |

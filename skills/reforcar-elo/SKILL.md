@@ -29,7 +29,7 @@ Sobe a nota de um elo percorrendo uma **fila** de estratégias, da que mais rend
 
    Pronto quando cada técnica da tabela do problema está na fila ou tem na cobertura o resultado que a tirou dela.
 5. **Percorra a fila** do topo, um item por vez:
-   1. Busque com o `garimpo`, com `--cobertura pesquisa/cobertura.jsonl`. A busca feita fora dele ganha uma linha em Cobertura fora do `garimpo`, no estado.
+   1. Busque com o `garimpo`, com `--cobertura pesquisa/cobertura.jsonl`. A busca feita fora dele [entra no mesmo registro](../../modelos/pesquisa/README.md#registrar-na-cobertura).
    2. Leia o que a busca achar, pelos passos da `ler-acervo`.
    3. Registre o resultado do item: achado, negativo ou pendente de acesso. O item bloqueado continua na fila: peça o desbloqueio ao usuário uma vez, siga com o seguinte e volte a ele quando o acesso abrir. Cada indício de um documento ainda não lido vira pista.
    4. Gradue o elo de novo e reordene a fila: um achado abre técnicas e nomes novos.
@@ -52,4 +52,4 @@ Confira a tabela depois de cada graduação, a começar pela do passo 2: a linha
 
 Duas estratégias da fila são independentes quando nenhuma espera o resultado da outra. Abra uma thread para cada uma quando as duas pedem a leitura de um acervo inteiro (um filme, o índice de um fundo) em fontes diferentes. Na mesma conta do FamilySearch os pedidos saem um por vez: duas threads ali só se revezam.
 
-Cada thread nasce pelo procedimento de [Delegação](../../docs/skills/abertura.md#delegação) e roda a skill `ler-acervo` sobre o acervo da sua estratégia. O briefing dela diz o que muda no fechamento: a thread não escreve no estado do elo. Os achados e a cobertura dela ficam no relatório e no arquivo de leitura dela, e as pistas, um arquivo cada, em `pistas/`. O estado é só desta conversa, que relê o relatório de cada thread, leva ao estado os documentos, a cobertura e as notas, e retoma o passo 5.
+Cada thread nasce pelo procedimento de [Delegação](../../docs/skills/abertura.md#delegação) e roda a skill `ler-acervo` sobre o acervo da sua estratégia. O briefing dela diz o que muda no fechamento: a thread não escreve no estado do elo. Os achados dela ficam no relatório e no arquivo de leitura dela, a cobertura, no registro da pesquisa, e as pistas, um arquivo cada, em `pistas/`. O estado é só desta conversa, que relê o relatório de cada thread, leva ao estado os documentos e as notas, e retoma o passo 5.

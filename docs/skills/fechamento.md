@@ -20,7 +20,8 @@ Os passos com que toda skill do kit termina, sem o usuário pedir.
    - o relatório da conversa em `relatorios/<AAAA-MM-DD>-<assunto>.md`, com os achados, a explicação e as tabelas entregues;
    - os recortes em `elos/<elo>/recortes/`;
    - cada pista nova em `elos/<elo>/pistas/`, no [formato da régua](../guias/regua-de-prova.md#formato-de-registro);
-   - o `estado.md` de cada elo tocado: a data de hoje em `atualizado`, as notas, os documentos, a cobertura e os próximos passos, com esta conversa fora de Conversas abertas.
+   - cada busca feita fora do `garimpo` que ainda falta na cobertura, pela receita de [Registrar na cobertura](../../modelos/pesquisa/README.md#registrar-na-cobertura);
+   - o `estado.md` de cada elo tocado: a data de hoje em `atualizado`, as notas, os documentos e os próximos passos, com esta conversa fora de Conversas abertas.
 
    Pronto quando outra conversa consegue retomar cada elo lendo só a pasta.
 4. **Resposta.** Responda no formato de [Responder](../guias/leitura-e-operacao.md#responder): a resposta à pergunta do usuário, os achados, a tabela de gravações, os próximos passos numerados em ordem e, na última linha, uma pergunta só. Havendo tabela, a pergunta é a aprovação dela, para que um "sim" baste. Pronto quando a resposta termina nessa pergunta.
