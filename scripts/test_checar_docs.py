@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checar_docs import checar, read_command
+from checar_docs import check, read_command
 
 # What every command of a small made-up CLI prints at the end of its `--help`,
 # in clap's layout: its own help option and the options of the whole CLI.
@@ -98,7 +98,7 @@ class ChecarDocs(unittest.TestCase):
             destino.parent.mkdir(parents=True, exist_ok=True)
             destino.write_text(texto, encoding="utf-8")
         markdown = [Path(nome) for nome in arquivos if nome.endswith(".md")]
-        return [(str(p.arquivo), p.linha) for p in checar(self.raiz, markdown, CLI)]
+        return [(str(p.file), p.line) for p in check(self.raiz, markdown, CLI)]
 
     def test_link_para_arquivo_que_nao_existe_e_apontado(self) -> None:
         achados = self.problemas(

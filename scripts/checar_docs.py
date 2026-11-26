@@ -21,12 +21,12 @@ from pathlib import Path
 from urllib.parse import unquote
 
 LINK = re.compile(r"\]\(([^)\s]+)[^)]*\)")
-TITULO = re.compile(r"#+\s+(.*)")
-CAMPO = re.compile(r"([A-Za-z][\w-]*):\s*(.*)")
-# Valor de uma linha: entre aspas (sem a mesma aspa dentro) ou sem aspas.
-VALOR = re.compile(r"""\"([^"]*)\"|'([^']*)'|([^"'].*)""")
-CODIGO_NA_LINHA = re.compile(r"`[^`]*`")
-COM_ESQUEMA = re.compile(r"[a-z][a-z0-9+.-]*:", re.IGNORECASE)
+HEADING = re.compile(r"#+\s+(.*)")
+FIELD = re.compile(r"([A-Za-z][\w-]*):\s*(.*)")
+# A single-line value may be unquoted or enclosed in matching quotes.
+FIELD_VALUE = re.compile(r"""\"([^"]*)\"|'([^']*)'|([^"'].*)""")
+INLINE_CODE = re.compile(r"`[^`]*`")
+URI_SCHEME = re.compile(r"[a-z][a-z0-9+.-]*:", re.IGNORECASE)
 # A quoted argument: a value, whatever it holds.
 QUOTED = re.compile(r"\"[^\"]*\"|'[^']*'")
 # `garimpo`, then the words that follow it, up to the first that is neither an
@@ -46,8 +46,8 @@ SUBCOMMAND = re.compile(r"^  ([a-z][a-z0-9-]*)", re.MULTILINE)
 # One entry of an options list of a help text, with its short form when it has
 # one; the description comes below it, indented deeper.
 OPTION = re.compile(r"^ {2,6}(?:(-[A-Za-z]), )?(--[a-z][a-z0-9-]*)", re.MULTILINE)
-# O telefone exige DDD para não confundir com intervalos de anos (1831-1840).
-DADOS_PESSOAIS = {
+# Require an area code to distinguish phone numbers from year ranges (1831-1840).
+PERSONAL_DATA = {
     "CPF": re.compile(r"(?<!\d)\d{3}\.?\d{3}\.?\d{3}-?\d{2}(?!\d)"),
     "e-mail": re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)*\.[A-Za-z]{2,}"),
     "telefone": re.compile(
@@ -66,85 +66,84 @@ class Command:
 
 
 @dataclass(frozen=True)
-class Problema:
-    arquivo: Path
-    linha: int
-    mensagem: str
+class Problem:
+    file: Path
+    line: int
+    message: str
 
     def __str__(self) -> str:
-        return f"{self.arquivo}:{self.linha}: {self.mensagem}"
+        return f"{self.file}:{self.line}: {self.message}"
 
 
-def checar(raiz: Path, arquivos: Iterable[Path], cli: Command) -> Iterator[Problema]:
-    """Confere cada arquivo Markdown, dado por caminho relativo à raiz."""
-    for arquivo in arquivos:
-        linhas = (raiz / arquivo).read_text(encoding="utf-8").splitlines()
-        yield from links_quebrados(raiz, arquivo, linhas)
-        yield from wrong_citations(arquivo, linhas, cli)
-        for numero, linha in enumerate(linhas, start=1):
-            for tipo, padrao in DADOS_PESSOAIS.items():
-                if padrao.search(linha):
-                    yield Problema(
-                        arquivo,
-                        numero,
-                        f"parece {tipo}: troque por um campo a preencher",
+def check(root: Path, files: Iterable[Path], cli: Command) -> Iterator[Problem]:
+    """Check each Markdown file given by its path relative to the root."""
+    for file in files:
+        lines = (root / file).read_text(encoding="utf-8").splitlines()
+        yield from broken_links(root, file, lines)
+        yield from wrong_citations(file, lines, cli)
+        for number, line in enumerate(lines, start=1):
+            for kind, pattern in PERSONAL_DATA.items():
+                if pattern.search(line):
+                    yield Problem(
+                        file,
+                        number,
+                        f"parece {kind}: troque por um campo a preencher",
                     )
-        if arquivo.name == "SKILL.md":
-            yield from frontmatter_invalido(arquivo, linhas)
+        if file.name == "SKILL.md":
+            yield from invalid_frontmatter(file, lines)
 
 
-def fora_de_blocos(linhas: Iterable[str]) -> Iterator[tuple[int, str]]:
-    """Linhas numeradas, sem os blocos de código."""
-    em_bloco = False
-    for numero, linha in enumerate(linhas, start=1):
-        if linha.lstrip().startswith(("```", "~~~")):
-            em_bloco = not em_bloco
-        elif not em_bloco:
-            yield numero, linha
+def outside_code_blocks(lines: Iterable[str]) -> Iterator[tuple[int, str]]:
+    """Yield numbered lines outside fenced code blocks."""
+    in_block = False
+    for number, line in enumerate(lines, start=1):
+        if line.lstrip().startswith(("```", "~~~")):
+            in_block = not in_block
+        elif not in_block:
+            yield number, line
 
 
-def ancoras(linhas: Iterable[str]) -> Iterator[str]:
-    """Âncora de cada título, como o GitHub gera: minúsculas, sem pontuação, com
-    hífens, e um sufixo numerado quando o título se repete."""
-    vistas: Counter[str] = Counter()
-    for _, linha in fora_de_blocos(linhas):
-        if titulo := TITULO.match(linha):
-            ancora = re.sub(r"[^\w -]", "", titulo[1].strip().lower()).replace(" ", "-")
-            yield f"{ancora}-{vistas[ancora]}" if vistas[ancora] else ancora
-            vistas[ancora] += 1
+def anchors(lines: Iterable[str]) -> Iterator[str]:
+    """Yield GitHub heading anchors with numbered suffixes for repeated headings."""
+    seen: Counter[str] = Counter()
+    for _, line in outside_code_blocks(lines):
+        if heading := HEADING.match(line):
+            anchor = re.sub(r"[^\w -]", "", heading[1].strip().lower()).replace(
+                " ", "-"
+            )
+            yield f"{anchor}-{seen[anchor]}" if seen[anchor] else anchor
+            seen[anchor] += 1
 
 
-def links_quebrados(
-    raiz: Path, arquivo: Path, linhas: Sequence[str]
-) -> Iterator[Problema]:
-    """Links relativos precisam apontar para um arquivo e uma âncora que existem."""
-    for numero, linha in fora_de_blocos(linhas):
-        for alvo in LINK.findall(CODIGO_NA_LINHA.sub("", linha)):
-            if COM_ESQUEMA.match(alvo):
+def broken_links(root: Path, file: Path, lines: Sequence[str]) -> Iterator[Problem]:
+    """Report relative links whose file or anchor is missing."""
+    for number, line in outside_code_blocks(lines):
+        for target in LINK.findall(INLINE_CODE.sub("", line)):
+            if URI_SCHEME.match(target):
                 continue
-            caminho, _, ancora = unquote(alvo).partition("#")
-            base = raiz if caminho.startswith("/") else raiz / arquivo.parent
-            destino = base / caminho.lstrip("/") if caminho else raiz / arquivo
-            if not destino.exists():
-                yield Problema(arquivo, numero, f"link quebrado: {alvo}")
-            elif ancora and destino.suffix == ".md":
-                titulos = destino.read_text(encoding="utf-8").splitlines()
-                if ancora not in ancoras(titulos):
-                    yield Problema(arquivo, numero, f"âncora quebrada: {alvo}")
+            path, _, anchor = unquote(target).partition("#")
+            base = root if path.startswith("/") else root / file.parent
+            destination = base / path.lstrip("/") if path else root / file
+            if not destination.exists():
+                yield Problem(file, number, f"link quebrado: {target}")
+            elif anchor and destination.suffix == ".md":
+                target_lines = destination.read_text(encoding="utf-8").splitlines()
+                if anchor not in anchors(target_lines):
+                    yield Problem(file, number, f"âncora quebrada: {target}")
 
 
 def wrong_citations(
     file: Path, lines: Sequence[str], cli: Command
-) -> Iterator[Problema]:
+) -> Iterator[Problem]:
     """Every `garimpo …` written as code must name a command the CLI has, with
     options that the command takes."""
-    outside = {number for number, _ in fora_de_blocos(lines)}
+    outside = {number for number, _ in outside_code_blocks(lines)}
     # The start of an invocation that a `\` at the end of the line carries on
     # to the next one, and the line it began on.
     carried, start = "", 0
     for number, line in enumerate(lines, start=1):
         # Inside a fenced block the whole line is code; outside, only the spans.
-        code = "".join(CODIGO_NA_LINHA.findall(line)) if number in outside else line
+        code = "".join(INLINE_CODE.findall(line)) if number in outside else line
         start = start if carried else number
         if number not in outside and code.endswith("\\"):
             carried += code[:-1]
@@ -161,7 +160,7 @@ def wrong_citations(
                 if word in ("-h", "--help", "-V", "--version"):
                     break
                 if word not in command.subcommands:
-                    yield Problema(
+                    yield Problem(
                         file,
                         start,
                         f"`{word}` vem antes do comando: ponha as opções depois dele"
@@ -175,7 +174,7 @@ def wrong_citations(
             if not command.subcommands:
                 for option in CITED_OPTION.findall(words + QUOTED.sub('""', rest)):
                     if option not in command.options:
-                        yield Problema(
+                        yield Problem(
                             file, start, f"`{name}` não tem a opção `{option}`"
                         )
 
@@ -200,42 +199,40 @@ def read_command(
     )
 
 
-def frontmatter_invalido(arquivo: Path, linhas: Sequence[str]) -> Iterator[Problema]:
-    """Uma skill abre com um bloco `---` que traz `name` e `description` numa linha cada."""
-    if not linhas or linhas[0] != "---" or "---" not in linhas[1:]:
-        yield Problema(arquivo, 1, "frontmatter ausente ou sem o `---` final")
+def invalid_frontmatter(file: Path, lines: Sequence[str]) -> Iterator[Problem]:
+    """A skill starts with a fenced frontmatter block and single-line name and description."""
+    if not lines or lines[0] != "---" or "---" not in lines[1:]:
+        yield Problem(file, 1, "frontmatter ausente ou sem o `---` final")
         return
-    campos = {
-        campo[1]: (numero, campo[2].strip())
-        for numero, linha in enumerate(linhas[: linhas.index("---", 1)], start=1)
-        if (campo := CAMPO.match(linha))
+    fields = {
+        field[1]: (number, field[2].strip())
+        for number, line in enumerate(lines[: lines.index("---", 1)], start=1)
+        if (field := FIELD.match(line))
     }
-    for chave in ("name", "description"):
-        numero, bruto = campos.get(chave, (1, ""))
-        partes = VALOR.fullmatch(bruto)
-        valor = next(filter(None, partes.groups()), "") if partes else ""
-        if bruto and not partes:
-            yield Problema(arquivo, numero, f"`{chave}` com aspas sem par")
-        elif not valor:
-            yield Problema(arquivo, numero, f"frontmatter sem `{chave}`")
-        elif partes and partes[3] and ": " in valor:
-            yield Problema(arquivo, numero, f"`{chave}` com `: ` precisa de aspas")
-        elif chave == "name" and valor != arquivo.parent.name:
-            yield Problema(
-                arquivo, numero, f"`name` difere da pasta `{arquivo.parent.name}`"
-            )
+    for key in ("name", "description"):
+        number, raw = fields.get(key, (1, ""))
+        parts = FIELD_VALUE.fullmatch(raw)
+        value = next(filter(None, parts.groups()), "") if parts else ""
+        if raw and not parts:
+            yield Problem(file, number, f"`{key}` com aspas sem par")
+        elif not value:
+            yield Problem(file, number, f"frontmatter sem `{key}`")
+        elif parts and parts[3] and ": " in value:
+            yield Problem(file, number, f"`{key}` com `: ` precisa de aspas")
+        elif key == "name" and value != file.parent.name:
+            yield Problem(file, number, f"`name` difere da pasta `{file.parent.name}`")
 
 
 def main() -> int:
-    raiz = Path(__file__).resolve().parent.parent
-    run = partial(subprocess.run, check=True, capture_output=True, text=True, cwd=raiz)
-    # O git lista os rastreados e os novos, sem o que o .gitignore exclui.
-    listagem = run(
+    root = Path(__file__).resolve().parent.parent
+    run = partial(subprocess.run, check=True, capture_output=True, text=True, cwd=root)
+    # Include tracked and new files, respecting .gitignore.
+    listing = run(
         ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "*.md"]
     ).stdout
-    # Um arquivo apagado e ainda não commitado continua na lista do git.
-    arquivos = sorted(
-        Path(nome) for nome in listagem.split("\0") if nome and (raiz / nome).exists()
+    # A tracked file deleted from the working tree still appears in the list.
+    files = sorted(
+        Path(name) for name in listing.split("\0") if name and (root / name).exists()
     )
     # The CLI is built once and run directly: `cargo run` takes over half a
     # second per help text, and there is one per command.
@@ -246,10 +243,10 @@ def main() -> int:
     # Cargo's own JSON, trusted as it comes.
     garimpo = Path(json.loads(metadata)["target_directory"], "debug", "garimpo")
     cli = read_command(lambda path: run([garimpo, *path, "--help"]).stdout)
-    problemas = list(checar(raiz, arquivos, cli))
-    for problema in problemas:
-        print(problema)
-    return 1 if problemas else 0
+    problems = list(check(root, files, cli))
+    for problem in problems:
+        print(problem)
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":
