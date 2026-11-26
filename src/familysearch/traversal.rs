@@ -132,7 +132,8 @@ pub(super) fn list(config: &Config, file: &Path) -> Result<(), Error> {
             let date = match formal.as_deref() {
                 // Keep the GEDCOM X notation for ranges and recurring dates.
                 Some(text) if text.contains('/') => Some(text),
-                Some(text) => Some(text.trim_start_matches('+')),
+                // An approximate date shows as the date it is about, as in `caminhos`.
+                Some(text) => Some(text.trim_start_matches('A').trim_start_matches('+')),
                 None => date.and_then(|date| date.original.as_deref()),
             };
             let place = fact

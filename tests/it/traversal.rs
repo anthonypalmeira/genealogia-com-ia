@@ -297,7 +297,7 @@ fn family(request: &Request) -> Reply {
                 "date": {"original": "1 de junho de 1800", "formal": "+1800-06-01"},
                 "place": {"original": "Vila Exemplo, Minas Gerais"},
             },
-            fact("Death", "+1890"),
+            fact("Death", "A+1890"),
             {
                 "type": "http://gedcomx.org/Occupation", "value": "lavrador",
                 "date": {"original": "por volta de 1830"},
