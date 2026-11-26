@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checar_docs import checar, read_command
+from checar_docs import check, read_command
 
 # What every command of a small made-up CLI prints at the end of its `--help`,
 # in clap's layout: its own help option and the options of the whole CLI.
@@ -85,29 +85,29 @@ HELP = {
 CLI = read_command(HELP.__getitem__)
 
 
-class ChecarDocs(unittest.TestCase):
+class CheckDocs(unittest.TestCase):
     def setUp(self) -> None:
-        pasta = tempfile.TemporaryDirectory()
-        self.addCleanup(pasta.cleanup)
-        self.raiz = Path(pasta.name)
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        self.root = Path(folder.name)
 
-    def problemas(self, arquivos: dict[str, str]) -> list[tuple[str, int]]:
-        """Grava os arquivos, roda a checagem e devolve (arquivo, linha) de cada problema."""
-        for nome, texto in arquivos.items():
-            destino = self.raiz / nome
-            destino.parent.mkdir(parents=True, exist_ok=True)
-            destino.write_text(texto, encoding="utf-8")
-        markdown = [Path(nome) for nome in arquivos if nome.endswith(".md")]
-        return [(str(p.arquivo), p.linha) for p in checar(self.raiz, markdown, CLI)]
+    def problems(self, files: dict[str, str]) -> list[tuple[str, int]]:
+        """Writes the files, runs the check and returns (file, line) of each problem."""
+        for name, text in files.items():
+            target = self.root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(text, encoding="utf-8")
+        markdown = [Path(name) for name in files if name.endswith(".md")]
+        return [(str(p.file), p.line) for p in check(self.root, markdown, CLI)]
 
-    def test_link_para_arquivo_que_nao_existe_e_apontado(self) -> None:
-        achados = self.problemas(
+    def test_link_to_a_missing_file_is_reported(self) -> None:
+        found = self.problems(
             {"AGENTS.md": "# Mapa\n\nVeja o [guia](docs/guias/fontes.md).\n"}
         )
-        self.assertEqual(achados, [("AGENTS.md", 3)])
+        self.assertEqual(found, [("AGENTS.md", 3)])
 
-    def test_links_validos_externos_e_dentro_de_codigo_passam(self) -> None:
-        achados = self.problemas(
+    def test_valid_links_external_links_and_links_in_code_pass(self) -> None:
+        found = self.problems(
             {
                 "AGENTS.md": "# Mapa\n",
                 "docs/guias/fontes.md": (
@@ -129,10 +129,10 @@ class ChecarDocs(unittest.TestCase):
                 ),
             }
         )
-        self.assertEqual(achados, [])
+        self.assertEqual(found, [])
 
-    def test_ancora_que_nao_existe_e_apontada(self) -> None:
-        achados = self.problemas(
+    def test_missing_anchor_is_reported(self) -> None:
+        found = self.problems(
             {
                 "docs/guias/fontes.md": "# Fontes\n\n## Minas Gerais\n",
                 "docs/guias/estrategias.md": (
@@ -143,34 +143,34 @@ class ChecarDocs(unittest.TestCase):
             }
         )
         self.assertEqual(
-            achados,
+            found,
             [("docs/guias/estrategias.md", 2), ("docs/guias/estrategias.md", 3)],
         )
 
-    def test_skill_sem_frontmatter_ou_sem_description_e_apontada(self) -> None:
-        achados = self.problemas(
+    def test_skill_without_frontmatter_or_description_is_reported(self) -> None:
+        found = self.problems(
             {
                 "skills/pedido/SKILL.md": "---\nname: pedido\n---\n\n# Pedido\n",
                 "skills/diagrama/SKILL.md": "# Diagrama\n",
             }
         )
         self.assertEqual(
-            achados, [("skills/pedido/SKILL.md", 1), ("skills/diagrama/SKILL.md", 1)]
+            found, [("skills/pedido/SKILL.md", 1), ("skills/diagrama/SKILL.md", 1)]
         )
 
-    def test_skill_com_nome_diferente_da_pasta_e_apontada(self) -> None:
-        achados = self.problemas(
+    def test_skill_named_unlike_its_folder_is_reported(self) -> None:
+        found = self.problems(
             {
                 "skills/pedido/SKILL.md": (
                     "---\nname: pedidos\ndescription: Redige pedidos curtos.\n---\n"
                 )
             }
         )
-        self.assertEqual(achados, [("skills/pedido/SKILL.md", 2)])
+        self.assertEqual(found, [("skills/pedido/SKILL.md", 2)])
 
-    def test_valor_que_quebra_o_yaml_e_apontado(self) -> None:
+    def test_value_that_breaks_the_yaml_is_reported(self) -> None:
         # `: ` sem aspas e aspas sem fechar quebram o YAML, e a skill não carrega.
-        achados = self.problemas(
+        found = self.problems(
             {
                 "skills/pedido/SKILL.md": (
                     "---\n"
@@ -194,7 +194,7 @@ class ChecarDocs(unittest.TestCase):
             }
         )
         self.assertEqual(
-            achados,
+            found,
             [
                 ("skills/pedido/SKILL.md", 3),
                 ("skills/caminhos/SKILL.md", 3),
@@ -202,8 +202,8 @@ class ChecarDocs(unittest.TestCase):
             ],
         )
 
-    def test_cpf_email_e_telefone_sao_apontados(self) -> None:
-        achados = self.problemas(
+    def test_cpf_email_and_phone_are_reported(self) -> None:
+        found = self.problems(
             {
                 "docs/guias/pedido.md": (
                     "# Modelo de pedido\n"
@@ -218,11 +218,11 @@ class ChecarDocs(unittest.TestCase):
             }
         )
         self.assertEqual(
-            achados, [("docs/guias/pedido.md", linha) for linha in range(2, 9)]
+            found, [("docs/guias/pedido.md", line) for line in range(2, 9)]
         )
 
-    def test_anos_cotas_e_versoes_nao_sao_dados_pessoais(self) -> None:
-        achados = self.problemas(
+    def test_years_call_numbers_and_versions_are_not_personal_data(self) -> None:
+        found = self.problems(
             {
                 "docs/guias/fontes.md": (
                     "Registros da Igreja Católica, 1706-1999; listas de 1831-1832.\n"
@@ -232,10 +232,10 @@ class ChecarDocs(unittest.TestCase):
                 )
             }
         )
-        self.assertEqual(achados, [])
+        self.assertEqual(found, [])
 
     def test_cli_command_that_does_not_exist_is_reported(self) -> None:
-        found = self.problemas(
+        found = self.problems(
             {
                 "docs/skills/abertura.md": (
                     "# Abertura\n"
@@ -255,7 +255,7 @@ class ChecarDocs(unittest.TestCase):
         )
 
     def test_cli_commands_with_arguments_and_prose_about_the_cli_pass(self) -> None:
-        found = self.problemas(
+        found = self.problems(
             {
                 "docs/skills/abertura.md": (
                     "# Abertura\n"
@@ -286,7 +286,7 @@ class ChecarDocs(unittest.TestCase):
         self.assertEqual(found, [])
 
     def test_cli_option_that_the_command_does_not_have_is_reported(self) -> None:
-        found = self.problemas(
+        found = self.problems(
             {
                 "docs/skills/abertura.md": (
                     "# Abertura\n"
