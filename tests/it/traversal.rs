@@ -298,8 +298,11 @@ fn family(request: &Request) -> Reply {
                 "date": {"original": "1 de junho de 1800", "formal": "+1800-06-01"},
                 "place": {"original": "Vila Exemplo, Minas Gerais"},
             },
-            fact("Death", "+1890"),
-            {"type": "http://gedcomx.org/Occupation", "value": "lavrador"},
+            fact("Death", "A+1890"),
+            {
+                "type": "http://gedcomx.org/Occupation", "value": "lavrador",
+                "date": {"original": "por volta de 1830"},
+            },
         ]),
     );
     t["names"] = json!([
@@ -431,13 +434,13 @@ fn the_persons_of_a_traversal_are_listed_with_every_name_and_fact() {
     assert_eq!(
         persons.stdout.lines().collect::<Vec<_>>(),
         [
-            "A\t0\tPessoa Sintética A\tBirth +1880-05-20",
-            "B\t1\tPessoa Sintética B\tBirth +1812-03-10",
-            "C\t1\tPessoa Sintética C\tBirth +1849-06-15",
-            "D\t2\tPessoa Sintética D\tBirth +1820\tDeath +1848-02-01",
-            // What the contributor typed comes before the standard form.
+            "A\t0\tPessoa Sintética A\tBirth 1880-05-20",
+            "B\t1\tPessoa Sintética B\tBirth 1812-03-10",
+            "C\t1\tPessoa Sintética C\tBirth 1849-06-15",
+            "D\t2\tPessoa Sintética D\tBirth 1820\tDeath 1848-02-01",
             "T\t2\tPessoa Sintética T / Sintética T de Exemplo\t\
-             Birth 1 de junho de 1800 Vila Exemplo, Minas Gerais\tDeath +1890\tOccupation lavrador",
+             Birth 1800-06-01 Vila Exemplo, Minas Gerais\tDeath 1890\t\
+             Occupation lavrador por volta de 1830",
         ]
     );
 }

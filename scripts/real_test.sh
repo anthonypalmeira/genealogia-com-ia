@@ -10,15 +10,15 @@
 # login ao usuário e rode de novo), 4 é bloqueio, 7 é ponte sem aba. São cerca
 # de dez requisições, dentro do teto da sessão.
 #
-# Os alvos padrão são públicos e vêm das notas do projeto
-# ianderso/familysearch-mcp (MIT): uma pessoa falecida em 1799, de perfil
-# somente leitura, e um filme aberto. Troque-os pelas variáveis abaixo.
+# The public read-only profile (died in 1799) and open film come from the
+# ianderso/familysearch-mcp notes (MIT). The separate full-text group is from
+# the public Minas Gerais court records: 106 transcribed images on 2026-11-25.
 set -eu
 
 garimpo=${GARIMPO:-cargo run --quiet --release --}
 person=${GARIMPO_REAL_PESSOA:-KNDX-MKG}
 film=${GARIMPO_REAL_FILME:-008126335}
-group=${GARIMPO_REAL_GRUPO:-$film}
+group=${GARIMPO_REAL_GRUPO:-105076412}
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
@@ -33,6 +33,14 @@ $garimpo sessao conferir
 step "árvore: $person e os pais"
 $garimpo fs pessoa "$person"
 $garimpo fs pais "$person"
+
+step "retrato de $person"
+$garimpo fs ascendencia "$person" --geracoes 0 --saida "$work/pessoa.jsonl"
+$garimpo fs retratos "$work/pessoa.jsonl" --pasta "$work/retratos"
+if [ ! -s "$work/retratos/$person.jpg" ]; then
+    echo "teste real: não veio o retrato de $person" >&2
+    exit 1
+fi
 
 step "duas imagens do filme $film"
 $garimpo imagens baixar "$film" --de 1 --ate 2 --pasta "$work/imagens"
@@ -57,7 +65,11 @@ for number in "$count" "$total"; do
             ;;
     esac
 done
-if [ "$total" -lt 1 ] || [ "$count" != "$total" ]; then
+if [ "$total" -eq 0 ]; then
+    echo "teste real: o grupo não tem texto completo: troque GARIMPO_REAL_GRUPO" >&2
+    exit 1
+fi
+if [ "$count" != "$total" ]; then
     echo "teste real: o texto completo veio com $count de $total imagens" >&2
     exit 1
 fi

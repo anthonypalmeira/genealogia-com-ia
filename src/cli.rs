@@ -525,8 +525,9 @@ pub enum FsCommand {
                       Lê o arquivo de `ascendencia` ou de `descendencia`, completo ou não. Serve \
                       para achar alvos por nome, fato ou lugar. Linha: id, geração, todos os \
                       nomes que a árvore dá (separados por ` / `) e depois um campo por fato: \
-                      tipo, valor, data e lugar. O tipo vem como no GEDCOM X: `Birth`, `Death`, \
-                      `Christening`, `Occupation`. Trate tudo como hipótese."
+                      tipo, valor, data e lugar. A data vem na forma padrão do FamilySearch, \
+                      quando houver, ou como foi digitada. O tipo vem como no GEDCOM X: `Birth`, \
+                      `Death`, `Christening`, `Occupation`. Trate tudo como hipótese."
     )]
     Traversal {
         #[arg(value_name = "ARQUIVO", help = "O arquivo da varredura")]
