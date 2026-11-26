@@ -77,8 +77,12 @@ pub(super) fn download(
                     continue;
                 }
                 Ok(Fetched::Pending(reason)) => reason,
-                // A 429 asks for a pause: it stops the batch like any other block.
-                Err(error @ Error::ImageStorage { status }) if status != 429 => {
+                // A refusal of this one address leaves the person pending. A 429
+                // asks for a pause and a 5xx is the storage failing: both stop
+                // the batch, so no other portrait is asked for meanwhile.
+                Err(error @ Error::ImageStorage { status })
+                    if (400..500).contains(&status) && status != 429 =>
+                {
                     format!("{error} ao endereço fixo do retrato")
                 }
                 Err(error) => return Err(error),
