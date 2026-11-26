@@ -21,6 +21,7 @@ use std::{
 
 use anyhow::{Context, anyhow};
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
+use serde::Deserialize;
 use serde_json::json;
 
 use crate::{
@@ -68,6 +69,27 @@ pub(crate) fn random_string() -> Result<String, Error> {
     Ok(URL_SAFE_NO_PAD.encode(bytes))
 }
 
+/// The tree contributor and person identifiers from the current user profile.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct CurrentUser {
+    pub(crate) tree_user_id: Option<String>,
+    person_id: Option<String>,
+}
+
+impl CurrentUser {
+    pub(crate) fn fetch(transport: &Transport) -> Result<Self, Error> {
+        #[derive(Deserialize)]
+        struct Users {
+            users: [CurrentUser; 1],
+        }
+        let reply = transport.get("/platform/users/current")?;
+        let Users { users: [user] } = serde_json::from_str(&reply.body)
+            .map_err(|_| anyhow!("a resposta do FamilySearch não identifica o usuário atual"))?;
+        Ok(user)
+    }
+}
+
 /// Runs a command of the `sessao` group.
 pub(crate) fn run(config: &Config, command: &SessionCommand) -> Result<(), Error> {
     match command {
@@ -97,8 +119,16 @@ pub(crate) fn run(config: &Config, command: &SessionCommand) -> Result<(), Error
             config.print("sessao guardada", &json!({"sessao": "guardada"}))?;
         }
         SessionCommand::Check => {
-            Transport::new(config).get("/platform/users/current")?;
-            config.print("sessao valida", &json!({"sessao": "valida"}))?;
+            let user = CurrentUser::fetch(&Transport::new(config))?;
+            let line = format!(
+                "sessao valida\tagente {}\tpessoa {}",
+                crate::familysearch::field(user.tree_user_id.as_deref()),
+                crate::familysearch::field(user.person_id.as_deref()),
+            );
+            config.print(
+                &line,
+                &json!({"sessao": "valida", "agente": user.tree_user_id, "pessoa": user.person_id}),
+            )?;
         }
         SessionCommand::End => {
             end(&config.dir)?;

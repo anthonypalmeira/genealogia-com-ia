@@ -13,6 +13,11 @@
           "subject": "Hipótese sobre os avós",
           "text": "Os avós paternos podem estar no inventário de 1850.\nPróximo passo: ler o título de herdeiros.",
           "attribution": {
+            "created": 0,
+            "creator": {
+              "resource": "https://api.familysearch.org/platform/users/agents/SINT-TRE"
+            },
+            "modified": 86400000,
             "contributor": {
               "resource": "https://api.familysearch.org/platform/users/agents/SINT-AGT",
               "resourceId": "SINT-AGT"
@@ -22,6 +27,17 @@
             "note": {
               "href": "https://api.familysearch.org/platform/tree/persons/SINT-001/notes/SINT-N1?flag=fsh"
             }
+          }
+        },
+        {
+          "id": "SINT-N2",
+          "subject": "Inventário",
+          "text": "Conferir os herdeiros.",
+          "attribution": {
+            "contributor": {
+              "resource": "https://api.familysearch.org/platform/users/agents/SINT-AGT"
+            },
+            "modified": 86400000
           }
         }
       ]

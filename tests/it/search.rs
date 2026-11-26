@@ -246,7 +246,7 @@ fn waypoints_list_the_levels_of_a_collection_and_the_images_of_a_volume() {
 
 #[test]
 fn with_the_internal_routes_off_a_search_exits_8_and_makes_no_request() {
-    let fs = FakeServer::start(|_| full_text(0, &[]));
+    let fs = FakeServer::start(|_| Reply::recorded("current-user.json"));
     let env = TestEnv::new(&fs).with_var("GARIMPO_ROTAS_INTERNAS", "desligadas");
     env.deliver_session();
 

@@ -125,7 +125,9 @@ fn children_and_spouses_named_only_by_relationships_are_read_in_a_batch() {
 #[test]
 fn sources_and_notes_print_one_per_line() {
     let fs = FakeServer::start(|request| {
-        if request.path.ends_with("/sources") {
+        if request.is("GET", "/platform/users/current") {
+            Reply::recorded("current-user.json")
+        } else if request.path.ends_with("/sources") {
             Reply::recorded("sources.json")
         } else {
             Reply::recorded("notes.json")
@@ -140,24 +142,55 @@ fn sources_and_notes_print_one_per_line() {
     assert_eq!(
         sources.stdout,
         "SINT-F01\tBatismo de Joaquim, 1820\t\
-         https://exemplo.invalid/acervo/batismos/livro-3/folha-12\n"
+         https://exemplo.invalid/acervo/batismos/livro-3/folha-12\tSINT-TRE\t2018-12-01T15:11:07.759Z\talteracao\tproprio\n"
     );
     assert_eq!(notes.code, 0, "{}", notes.stderr);
     // The line break in the text becomes a space, so the note fits one line.
     assert_eq!(
         notes.stdout,
         "Hipótese sobre os avós\tOs avós paternos podem estar no inventário de 1850. \
-         Próximo passo: ler o título de herdeiros.\n"
+         Próximo passo: ler o título de herdeiros.\tSINT-TRE\t1970-01-01T00:00:00Z\tcriacao\tproprio\n\
+         Inventário\tConferir os herdeiros.\tSINT-AGT\t1970-01-02T00:00:00Z\talteracao\toutro\n"
     );
     let requests = fs.requests();
+    let routes: Vec<_> = requests.iter().map(Request::route).collect();
     assert_eq!(
-        requests[0].route(),
-        ("GET", "/platform/tree/persons/SINT-001/sources")
+        routes,
+        [
+            ("GET", "/platform/tree/persons/SINT-001/sources"),
+            ("GET", "/platform/users/current"),
+            ("GET", "/platform/tree/persons/SINT-001/notes"),
+            ("GET", "/platform/users/current"),
+        ]
     );
-    assert_eq!(
-        requests[1].route(),
-        ("GET", "/platform/tree/persons/SINT-001/notes")
+}
+
+#[test]
+fn source_json_preserves_the_description_and_leaves_unidentified_authorship_unknown() {
+    let fs = FakeServer::start(|request| {
+        if request.is("GET", "/platform/users/current") {
+            Reply::json(
+                200,
+                json!({"users":[{"id":"SINT-TRE","personId":"SINT-TRE"}]}).to_string(),
+            )
+        } else {
+            Reply::recorded("sources.json")
+        }
+    });
+    let env = TestEnv::logged_in(&fs);
+    let sources = env.run(&["fs", "fontes", "SINT-001", "--json"]);
+    assert_eq!(sources.code, 0, "{}", sources.stderr);
+    let source: serde_json::Value = serde_json::from_str(&sources.stdout).unwrap();
+    assert_eq!(source["id"], "SINT-F01");
+    assert!(
+        source["attribution"]["contributor"]["resource"]
+            .as_str()
+            .unwrap()
+            .ends_with("/SINT-AGT")
     );
+    assert_eq!(source["agente"], "SINT-TRE");
+    assert_eq!(source["data"], "2018-12-01T15:11:07.759Z");
+    assert_eq!(source["autoria"], "desconhecido");
 }
 
 #[test]

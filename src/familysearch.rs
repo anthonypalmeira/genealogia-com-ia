@@ -6,12 +6,16 @@ mod portraits;
 mod traversal;
 mod write;
 
-use std::{collections::HashSet, fmt, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt,
+    str::FromStr,
+};
 
 use anyhow::Context;
 use gedcomx::{
-    FactType, GenderType, Note, Person, Relationship, RelationshipType, ResourceReference,
-    SourceDescription,
+    Attribution, FactType, GenderType, Note, Person, Relationship, RelationshipType,
+    ResourceReference, SourceDescription,
 };
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Map, Value, json};
@@ -20,6 +24,7 @@ use self::traversal::Direction;
 use crate::{
     cli::{Config, FsCommand, TraversalArgs},
     error::Error,
+    session::CurrentUser,
     transport::Transport,
 };
 
@@ -204,20 +209,61 @@ pub fn run(config: &Config, command: &FsCommand) -> Result<(), Error> {
         FsCommand::Children { id } => print_relatives(config, &transport, id, Kin::Children)?,
         FsCommand::Spouses { id } => print_relatives(config, &transport, id, Kin::Spouses)?,
         FsCommand::Sources { id } => {
-            for source in fetch(route(id, "sources"))?.source_descriptions {
+            let tree = fetch(route(id, "sources"))?;
+            if tree.source_descriptions.is_empty() {
+                return Ok(());
+            }
+            let user = CurrentUser::fetch(&transport)?;
+            let mut attachments = HashMap::new();
+            for person in tree
+                .persons
+                .iter()
+                .filter(|person| person_id(person).as_ref() == Some(id))
+            {
+                for reference in &person.sources {
+                    let uri = reference.description.to_string();
+                    let key = reference
+                        .description_id
+                        .as_ref()
+                        .map(ToString::to_string)
+                        .or_else(|| {
+                            uri.strip_prefix('#')
+                                .or_else(|| resource_id(&uri, "/platform/sources/descriptions/"))
+                                .map(str::to_owned)
+                        });
+                    if let Some(key) = key {
+                        attachments
+                            .entry(key)
+                            .or_insert_with(Vec::new)
+                            .push(reference.attribution.as_ref());
+                    }
+                }
+            }
+            for source in tree.source_descriptions {
                 let line = [
                     field(source.id.as_ref()),
                     field(source.titles.first().map(|title| &title.value)),
                     field(source.about.as_ref()),
                 ]
                 .join("\t");
-                config.print(&line, &source)?;
+                let links = source
+                    .id
+                    .as_ref()
+                    .and_then(|id| attachments.get(&id.to_string()));
+                for attribution in links.map_or(&[None][..], Vec::as_slice) {
+                    print_attributed(config, &line, &source, *attribution, &user)?;
+                }
             }
         }
         FsCommand::Notes { id } => {
-            for note in notes(fetch(route(id, "notes"))?) {
+            let mut notes = notes(fetch(route(id, "notes"))?).peekable();
+            if notes.peek().is_none() {
+                return Ok(());
+            }
+            let user = CurrentUser::fetch(&transport)?;
+            for note in notes {
                 let line = [field(note.subject.as_ref()), field(Some(&note.text))].join("\t");
-                config.print(&line, &note)?;
+                print_attributed(config, &line, &note, note.attribution.as_ref(), &user)?;
             }
         }
         FsCommand::Ancestry {
@@ -352,6 +398,72 @@ fn print_relatives(
 
 fn notes(gedcomx: Gedcomx) -> impl Iterator<Item = Note> {
     gedcomx.persons.into_iter().flat_map(|person| person.notes)
+}
+
+/// The identifier in a FamilySearch API resource URL or root-relative path.
+fn resource_id<'a>(uri: &'a str, collection: &str) -> Option<&'a str> {
+    let path = uri
+        .strip_prefix("https://api.familysearch.org")
+        .unwrap_or(uri);
+    let id = path.strip_prefix(collection)?.split(['?', '#']).next()?;
+    (!id.is_empty() && !id.contains('/')).then_some(id)
+}
+
+fn print_attributed(
+    config: &Config,
+    line: &str,
+    item: &impl Serialize,
+    attribution: Option<&Attribution>,
+    user: &CurrentUser,
+) -> Result<(), Error> {
+    let (agent, date, event) = match attribution {
+        Some(a) if a.creator.is_some() => (a.creator.as_ref(), a.created.as_ref(), "criacao"),
+        Some(a) if a.contributor.is_some() || a.modified.is_some() => {
+            (a.contributor.as_ref(), a.modified.as_ref(), "alteracao")
+        }
+        Some(a) if a.created.is_some() => (None, a.created.as_ref(), "criacao"),
+        _ => (None, None, "-"),
+    };
+    let uri = agent.map(|r| r.resource.to_string());
+    let agent = uri
+        .as_deref()
+        .and_then(|uri| resource_id(uri, "/platform/users/agents/"));
+    let authorship = match (
+        agent,
+        user.tree_user_id.as_deref().filter(|id| !id.is_empty()),
+    ) {
+        (Some(author), Some(current)) if author == current => "proprio",
+        (Some(_), Some(_)) => "outro",
+        _ => "desconhecido",
+    };
+    #[derive(Serialize)]
+    struct Attributed<'a, T> {
+        #[serde(flatten)]
+        item: &'a T,
+        #[serde(rename = "agente")]
+        agent: Option<&'a str>,
+        #[serde(rename = "data")]
+        date: Option<String>,
+        #[serde(rename = "evento")]
+        event: &'a str,
+        #[serde(rename = "autoria")]
+        authorship: &'a str,
+    }
+    let row = Attributed {
+        item,
+        agent,
+        date: date.map(ToString::to_string),
+        event,
+        authorship,
+    };
+    config.print(
+        &format!(
+            "{line}\t{}\t{}\t{event}\t{authorship}",
+            field(agent),
+            field(row.date.as_deref())
+        ),
+        &row,
+    )
 }
 
 /// The name the tree shows first for a person.

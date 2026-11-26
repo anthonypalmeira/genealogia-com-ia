@@ -19,7 +19,7 @@ Abra a [régua de prova](../../docs/guias/regua-de-prova.md) antes de graduar: a
    - o que a pasta do elo e os relatórios de conversas anteriores já trazem;
    - os documentos de cada elo no relatório de referência e na pasta de provas indicada no perfil. Copie a referência, o trecho e a etiqueta de leitura que o relatório ou o índice da pasta dá, sem reler os documentos. Em **Onde está**, indique a origem da leitura e o arquivo local, quando houver. Marque **No relatório** como `sim` só no documento que o relatório de referência traz;
    - as fontes anexadas ao filho e ao pai ou à mãe: `garimpo fs fontes <ID>`. O título de uma fonte é hipótese: a régua diz o que vale uma fonte que ninguém leu na imagem;
-   - as notas das duas pessoas: `garimpo fs notas <ID>`. Nota de outro usuário é pista, e vai para `pistas/`.
+   - as notas das duas pessoas: `garimpo fs notas <ID>`. Guarde em `pistas/` cada nota marcada `outro`. Com `alteracao`, a marca identifica quem fez a última alteração. Com `desconhecido`, registre a autoria como incerta.
 
    Pronto quando cada documento da pasta do elo, do relatório de referência, da pasta de provas e cada fonte anexada está na tabela, com a etiqueta, e cada nota de outro usuário virou pista.
 4. **Gradue a filiação** de cada elo: o documento declara que o filho é filho daquele pai ou daquela mãe? Aplique as quatro perguntas da régua, a nota do tipo de documento com o que sobe e o que desce, e o perfil de prova. Pronto quando cada elo tem a nota de filiação, o documento que a sustenta e o que subiria a nota.

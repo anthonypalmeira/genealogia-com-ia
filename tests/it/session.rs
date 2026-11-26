@@ -20,13 +20,33 @@ fn session_delivered_once_serves_the_following_commands() {
     let checked = env.run(&["sessao", "conferir"]);
 
     assert_eq!(checked.code, 0, "{}", checked.stderr);
-    assert_eq!(checked.stdout, "sessao valida\n");
+    assert_eq!(
+        checked.stdout,
+        "sessao valida\tagente SINT-TRE\tpessoa SINT-USR\n"
+    );
     let requests = fs.requests();
     assert_eq!(requests.len(), 1);
     assert_eq!(requests[0].route(), ("GET", "/platform/users/current"));
     assert_eq!(
         requests[0].header("Authorization"),
         Some(format!("Bearer {TOKEN}").as_str())
+    );
+}
+
+#[test]
+fn current_user_json_reports_only_the_tree_ids_returned() {
+    let fs = FakeServer::start(|_| {
+        Reply::json(
+            200,
+            r#"{"users":[{"id":"cis.user.SINT-ETC","treeUserId":"SINT-TRE"}]}"#.into(),
+        )
+    });
+    let env = TestEnv::logged_in(&fs);
+    let checked = env.run(&["sessao", "conferir", "--json"]);
+    assert_eq!(checked.code, 0, "{}", checked.stderr);
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&checked.stdout).unwrap(),
+        serde_json::json!({"sessao":"valida","agente":"SINT-TRE","pessoa":null})
     );
 }
 
