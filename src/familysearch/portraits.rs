@@ -89,12 +89,15 @@ pub(super) fn download(
                 // only remedy is to wait.
                 Err(Error::ImageStorage {
                     status,
-                    retry_after_s,
+                    retry_after,
                 }) => {
-                    let wait = retry_after_s.map_or_else(
-                        || "alguns minutos".to_owned(),
-                        |seconds| format!("os {seconds} s que ele pediu"),
-                    );
+                    let wait = match retry_after {
+                        Some(seconds) if seconds.bytes().all(|b| b.is_ascii_digit()) => {
+                            format!("os {seconds} s que ele pediu")
+                        }
+                        Some(date) => format!("até {date}, como ele pediu"),
+                        None => "alguns minutos".to_owned(),
+                    };
                     return Err(anyhow!(
                         "o armazenamento de retratos respondeu {status} ao endereço fixo do \
                          retrato de {person}; espere {wait} antes de rodar de novo"

@@ -81,12 +81,19 @@ fn a_missing_portrait_at_the_cdn_is_retried_without_holding_up_the_next_person()
 
 #[test]
 fn a_cdn_asking_for_a_pause_or_failing_stops_the_batch() {
-    for status in [429, 503] {
+    for (status, retry_after, wait) in [
+        (429, "30", "espere os 30 s"),
+        (
+            503,
+            "Wed, 21 Oct 2026 07:28:00 GMT",
+            "espere até Wed, 21 Oct 2026 07:28:00 GMT",
+        ),
+    ] {
         let fs = FakeServer::start(move |request| {
             if request.path.starts_with("/platform/tree/persons?pids=") {
                 tree(request, &["A", "D"].map(person), &[("D", "A")])
             } else if request.path == "/retrato/A" {
-                Reply::empty(status).with_header("Retry-After", "30")
+                Reply::empty(status).with_header("Retry-After", retry_after)
             } else {
                 portraits(request)
             }
@@ -96,11 +103,7 @@ fn a_cdn_asking_for_a_pause_or_failing_stops_the_batch() {
 
         let failed = env.run(&["fs", "retratos", &file]);
         assert_eq!(failed.code, 1, "{status}: {}", failed.stderr);
-        assert!(
-            failed.stderr.contains("espere os 30 s"),
-            "{status}: {}",
-            failed.stderr
-        );
+        assert!(failed.stderr.contains(wait), "{status}: {}", failed.stderr);
         assert!(asked(&fs, "D").is_empty(), "{status}");
     }
 }

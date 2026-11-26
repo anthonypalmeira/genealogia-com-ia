@@ -175,7 +175,9 @@ impl<'a> Transport<'a> {
             let retry_after = response.headers().get("retry-after");
             return Err(Error::ImageStorage {
                 status,
-                retry_after_s: number(retry_after.and_then(|value| value.to_str().ok())),
+                retry_after: retry_after
+                    .and_then(|value| value.to_str().ok())
+                    .map(|value| value.trim().to_owned()),
             });
         }
         File::create(into)

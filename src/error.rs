@@ -48,8 +48,8 @@ pub enum Error {
     #[error("o armazenamento de imagens respondeu {status}")]
     ImageStorage {
         status: u16,
-        /// `Retry-After`: the pause the storage asks for, in seconds.
-        retry_after_s: Option<u64>,
+        /// `Retry-After` as the storage sent it: seconds or an HTTP date.
+        retry_after: Option<String>,
     },
     /// FamilySearch asked for a pause longer than the command accepts to wait.
     #[error("bloqueio: o FamilySearch pediu uma pausa e ainda faltam {seconds} s")]
