@@ -80,17 +80,24 @@ pub(super) fn download(
                 // A refusal of this one address leaves the person pending. A 429
                 // asks for a pause and a 5xx is the storage failing: both stop
                 // the batch, so no other portrait is asked for meanwhile.
-                Err(error @ Error::ImageStorage { status })
+                Err(error @ Error::ImageStorage { status, .. })
                     if (400..500).contains(&status) && status != 429 =>
                 {
                     format!("{error} ao endereço fixo do retrato")
                 }
                 // The address is fixed: asking again gives the same one, so the
                 // only remedy is to wait.
-                Err(Error::ImageStorage { status }) => {
+                Err(Error::ImageStorage {
+                    status,
+                    retry_after_s,
+                }) => {
+                    let wait = retry_after_s.map_or_else(
+                        || "alguns minutos".to_owned(),
+                        |seconds| format!("os {seconds} s que ele pediu"),
+                    );
                     return Err(anyhow!(
                         "o armazenamento de retratos respondeu {status} ao endereço fixo do \
-                         retrato de {person}; espere alguns minutos antes de rodar de novo"
+                         retrato de {person}; espere {wait} antes de rodar de novo"
                     )
                     .into());
                 }

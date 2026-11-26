@@ -46,7 +46,11 @@ pub enum Error {
     Restricted { what: String },
     /// The storage returned a non-success status at a redirected image address.
     #[error("o armazenamento de imagens respondeu {status}")]
-    ImageStorage { status: u16 },
+    ImageStorage {
+        status: u16,
+        /// `Retry-After`: the pause the storage asks for, in seconds.
+        retry_after_s: Option<u64>,
+    },
     /// FamilySearch asked for a pause longer than the command accepts to wait.
     #[error("bloqueio: o FamilySearch pediu uma pausa e ainda faltam {seconds} s")]
     Paused { seconds: u64 },

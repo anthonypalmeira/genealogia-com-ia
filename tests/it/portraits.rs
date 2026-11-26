@@ -97,7 +97,7 @@ fn a_cdn_asking_for_a_pause_or_failing_stops_the_batch() {
         let failed = env.run(&["fs", "retratos", &file]);
         assert_eq!(failed.code, 1, "{status}: {}", failed.stderr);
         assert!(
-            failed.stderr.contains("espere"),
+            failed.stderr.contains("espere os 30 s"),
             "{status}: {}",
             failed.stderr
         );

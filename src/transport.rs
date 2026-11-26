@@ -172,7 +172,11 @@ impl<'a> Transport<'a> {
         })?;
         let status = response.status().as_u16();
         if !(200..=299).contains(&status) {
-            return Err(Error::ImageStorage { status });
+            let retry_after = response.headers().get("retry-after");
+            return Err(Error::ImageStorage {
+                status,
+                retry_after_s: number(retry_after.and_then(|value| value.to_str().ok())),
+            });
         }
         File::create(into)
             .and_then(|mut file| io::copy(&mut response.body_mut().as_reader(), &mut file))
