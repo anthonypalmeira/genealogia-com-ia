@@ -469,7 +469,7 @@ pub enum FsCommand {
     },
     #[command(
         name = "fontes",
-        about = "As fontes anexadas a uma pessoa. Linha: id da fonte, título, URL, agente do anexo, data UTC, evento, autoria"
+        about = "As fontes anexadas a uma pessoa. Linha: id da fonte, título, URL, agente, data UTC, evento (`criacao` do anexo ou, sem ela, a última `alteracao`), autoria desse agente"
     )]
     Sources {
         #[arg(value_name = "ID")]
@@ -477,7 +477,7 @@ pub enum FsCommand {
     },
     #[command(
         name = "notas",
-        about = "As notas de uma pessoa. Linha: assunto, texto, agente, data UTC, evento, autoria"
+        about = "As notas de uma pessoa. Linha: assunto, texto, agente, data UTC, evento (`criacao` ou, sem ela, a última `alteracao`), autoria desse agente"
     )]
     Notes {
         #[arg(value_name = "ID")]
