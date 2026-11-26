@@ -34,7 +34,7 @@ Marque cada achado com o modo como foi visto:
 | Etiqueta | Significado | Efeito na nota |
 |---|---|---|
 | **[V]** | Lido na imagem do documento | Vale a nota do documento |
-| **[Ed]** | Edição impressa de fontes primárias, como uma série de inventários ou de autos judiciais | Vale a nota do documento, com a etiqueta |
+| **[Ed]** | Edição impressa de fontes primárias, como uma série de inventários ou de autos judiciais | Vale a nota do documento, com a etiqueta, salvo quando a linha do tipo de documento manda descer pela leitura só na edição impressa |
 | **[T]** | Transcrição automática (OCR ou IA) | Sem nota: só localiza |
 | **[I]** | Índice | D sozinho; C com outro documento lido |
 | **[Cat]** | Catálogo ou ficha | Prova que o documento existe, não o que ele diz |
@@ -51,7 +51,7 @@ Troque [Ed] ou [S] por [V] quando ler o trecho decisivo na imagem do manuscrito.
 | Registro civil de nascimento | **A** | Contemporâneo; avós dos dois lados lidos na imagem | [Registro tardio](#registro-tardio); registro de um irmão ou neto sem declaração da própria pessoa prova o elo de cima, não o da pessoa |
 | Registro civil de casamento | **A** | Declara os pais falecidos, com as datas | Só índice |
 | Registro civil de óbito | **B**: nomeia só os pais | Lista os filhos do morto (A para filho → pai) | Declarante sem parentesco (D) |
-| Certidão moderna de registro civil ou eclesiástico, inclusive a transcrição certificada pelo paleógrafo do arquivo | Nota do registro para o trecho certificado, **com ressalva (livro não visto)** | Ler o trecho no livro tira a ressalva | Uma certidão da primeira folha de um processo matrimonial só sustenta o que essa folha declara |
+| Certidão moderna de registro civil ou eclesiástico, inclusive a transcrição certificada pelo paleógrafo do arquivo | Nota do registro para o trecho certificado, **com ressalva (livro não visto)**. Etiqueta: "[V] da certidão", nunca [V] sozinho | Ler o trecho no livro tira a ressalva | Uma certidão da primeira folha de um processo matrimonial só sustenta o que essa folha declara |
 | Inventário | **A** só se o título de herdeiros ou um termo **declara** a filiação | Idades no título; petições e recibos do maço ("meu irmão", "meu pai"); um bem nomeado que se cruza com outro documento | Só cita a pessoa como confrontante, credor ou "cunhado" (C). A pessoa faltar entre os herdeiros é indício contra, não F: um filho morto antes, sem descendentes, não herda |
 | Partilha | **A** | Julgada e paga, com recibos | Só pedida: pista de existência incerta |
 | Testamento | **A** | Do cônjuge, com "filha legítima de…" (A para o colateral); reconhece filhos naturais | Sobrenome ilegível. O testamento do suposto pai que nomeia todos os filhos, sem a pessoa, dá F só quando outro documento mostra a pessoa viva naquela data |
@@ -98,8 +98,8 @@ Quando o pesquisador decide uma nota diferente da régua, registre no elo a nota
 
 | Nota de identidade | Quando dar |
 |---|---|
-| **A** | Pelo menos duas âncoras diretas e fortes coincidem nos documentos lidos, sem contradição nem variante de nome por explicar |
-| **B** | Pelo menos duas âncoras, uma delas direta. Para chegar a duas, é preciso contar uma âncora fraca ou indireta, ou há variante de nome por explicar |
+| **A** | Pelo menos duas âncoras diretas e fortes coincidem nos documentos lidos, sem contradição nem divergência por explicar. Um bem nomeado com o mesmo valor nos dois documentos conta como duas âncoras |
+| **B** | Pelo menos duas âncoras, uma delas direta. Para chegar a duas, é preciso contar uma âncora fraca ou indireta, ou há divergência por explicar (variante de nome, idade ou data que um erro de registro ainda explica) |
 | **C forte** | Duas ou mais âncoras, todas indiretas |
 | **C** | Uma única âncora |
 | **D** | Identidade suposta, sem âncora |
