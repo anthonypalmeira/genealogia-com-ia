@@ -12,6 +12,7 @@ Isso é possível porque a imagem em resolução original chega em dois passos: 
 ## Consequências
 
 - A sessão vai só no pedido ao FamilySearch. O endereço assinado já é a credencial: mandar a sessão junto faz o armazenamento recusar, e o endereço nunca aparece em mensagem de erro.
+- Em `garimpo fs retratos`, o pedido de cada retrato também passa pelo regulador da conta e, quando o FamilySearch redireciona para a imagem, segura o pedido seguinte pelo intervalo das imagens. A transferência da miniatura vem da CDN, fora da vez da conta e sem a sessão.
 - O ganho do paralelo é limitado pelo intervalo: com transferências mais curtas que ele, o download anda no ritmo do intervalo.
-- As miniaturas vêm na própria resposta, sem redirecionamento: seguem em série, sem o intervalo, e contam no teto da sessão.
+- As miniaturas de filme vêm na própria resposta, sem redirecionamento: seguem em série, sem o intervalo, e contam no teto da sessão.
 - Os endereços do armazenamento vêm das notas de outro projeto e não foram conferidos com a conta logada: veja o teste real em `scripts/real_test.sh`.

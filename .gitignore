@@ -1,5 +1,6 @@
 /target
 # The user's research folder, a link to a folder outside the repository, and
-# the coverage log of a search run here without --cobertura.
+# the default logs of searches and tree changes run here.
 /pesquisa
 /cobertura.jsonl
+/alteracoes.jsonl

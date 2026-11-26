@@ -1,6 +1,6 @@
 # FamilySearch em detalhe
 
-Rotas, limites e pegadinhas do FamilySearch, observados em sessões reais de novembro de 2026 e não retestados para este guia. O kit usa a sessão do navegador do próprio usuário e, além das rotas oficiais, rotas internas do site. Leia antes [termos-e-riscos.md](termos-e-riscos.md): o uso é pessoal e não comercial, e o risco é da conta de quem usa.
+Rotas, limites e pegadinhas do FamilySearch, observados em sessões reais de novembro de 2026. O kit usa a sessão do navegador do próprio usuário e, além das rotas oficiais, rotas internas do site. Leia antes [termos-e-riscos.md](termos-e-riscos.md): o uso é pessoal e não comercial, e o risco é da conta de quem usa.
 
 As rotas internas (`/service/…`) mudam sem aviso. Quando uma falhar, registre a mudança em vez de insistir. A lista de rotas oficiais e as fontes primárias estão em [ferramentas-existentes.md](../pesquisa/ferramentas-existentes.md).
 
@@ -8,7 +8,7 @@ As rotas internas (`/service/…`) mudam sem aviso. Quando uma falhar, registre 
 
 | Item | Regra |
 |---|---|
-| Login | O usuário entra no FamilySearch no navegador dele. O agente usa o identificador dessa sessão como `Authorization: Bearer` |
+| Login | O usuário entra no FamilySearch no navegador dele. Confira com `garimpo sessao conferir`. No teste de 25/11/2026, a aba ainda tinha o cookie `fssessionid` quando o site redirecionou para o login do Google. O agente usa o identificador da sessão válida como `Authorization: Bearer` |
 | Token | Fica só em memória: nunca em disco, em linha de comando, em mensagem nem em log |
 | Expiração | A sessão dura menos de um dia. Com 401, peça novo login uma vez e siga com o que não depende dele |
 | Concorrência | Várias conversas na mesma conta somam no mesmo limite: um baixador por conta |
@@ -40,11 +40,11 @@ O que já está na árvore é hipótese. Exemplos vistos: título de fonte que e
 
 - Rota: `GET /service/search/fulltext/search`, com `q.text`, `q.fullName`, `q.anyPlace`, `q.anyDate.from`, `q.anyDate.to`, `q.groupName`, `count` e `offset`. Só funciona dentro da aba logada: fora dela, responde 403.
 - Sintaxe: `+termo` obriga, `-termo` exclui, `?` e `*` são curingas. **Uma frase entre aspas sem `+` é opcional**: escreva `+"nome completo"`. Tire os acentos da frase. `+termo` sem filtro de lugar ou de grupo devolve milhares de páginas.
-- **Puxar o grupo inteiro:** `q.groupName=<grupo>` sem texto devolve a transcrição de cada imagem do grupo. Pagine com `offset`, **pare no total informado** (depois dele os resultados se repetem) e deduplique pelo id. Se o teto de requisições da sessão chegar antes, pare, registre até onde foi e retome depois. Depois busque localmente todos os nomes da família e as palavras "sogro", "genro", "herdeiros", "tio", "a rogo".
+- **Puxar o grupo inteiro:** `q.groupName=<grupo>` sem texto devolve a transcrição de cada imagem do grupo. Pagine com `offset`, **pare no total informado** (depois dele os resultados se repetem) e deduplique pelo id. Se o teto de requisições da sessão chegar antes, pare, registre até onde foi e retome depois. Depois busque localmente todos os nomes da família e as palavras "sogro", "genro", "herdeiros", "tio", "a rogo". Com total 0, o grupo não tem transcrição: não busque os nomes nele, que dariam `negativo` sem nada lido, e siga para o índice ou as imagens.
 - As facetas de lugar mapeiam a cobertura e revelam rótulos errados.
 - Em filmes de arquivos judiciais, as fichas de microfilmagem e as capas das caixas servem de sumário.
 - Alto rendimento em processos judiciais de Minas, em livros católicos do Nordeste e em impressos paulistas. Baixo em paróquias de Minas.
-- Não cobre tudo: há filmes de habilitações e livros de casamento sem transcrição, e o registro civil do Nordeste não tem texto. Ausência no texto completo não prova nada.
+- Ao puxar um grupo inteiro, `200` com `results: 0` indica que a consulta funcionou e o grupo está sem transcrição. Para verificar se o documento está no filme, consulte o índice ou leia as imagens. Há filmes de habilitações e livros de casamento sem transcrição, e o registro civil do Nordeste não tem texto.
 - A transcrição erra nomes, datas e lugares, e lê uma taxa em réis como se fosse um ano. Procure cada ideia de vários jeitos e leia a imagem.
 
 ## Catálogo
@@ -67,7 +67,7 @@ O que já está na árvore é hipótese. Exemplos vistos: título de fonte que e
 | Impresso em grupo grande | `dist.jpg?scale=0.5` responde rápido e continua legível |
 | Imagem restrita | Vem um JSON curto de acesso negado. Anote a faixa como pendente de acesso. Blocos restritos entre processos costumam ser as fichas |
 
-A resolução do `dist.jpg` é a maior guardada **daquele filme** e varia de cerca de 1.400 px a 4.300 px. Pouca resolução não é motivo para parar: baixe o original, corte em metades e amplie.
+A resolução do `dist.jpg` é a maior guardada **daquele filme**. O lado maior observado vai de cerca de 1.400 a 5.700 px. Em 25/11/2026, a imagem 1 do filme público `008126335` veio com 5.706 × 2.588 px. Pouca resolução não é motivo para parar: baixe o original, corte em metades e amplie.
 
 ## Imagens com o `garimpo`
 
@@ -102,7 +102,7 @@ O grupo `garimpo busca` usa as rotas internas descritas acima: registros indexad
 | `garimpo busca catalogo-item <id>` | Um item do catálogo com os filmes, o grupo de imagens de cada um e se está aberto ou restrito |
 | `garimpo busca waypoints <coleção> [waypoint]` | Desce pelos níveis de uma coleção sem índice até as imagens, em ordem |
 
-**Cobertura.** Toda busca entra sozinha no registro de cobertura (`--cobertura`, por padrão `cobertura.jsonl` na pasta em que o comando roda): a consulta, o lugar, os anos, o total, os itens vistos e o resultado. O resultado é `lido` (tudo visto), `parcial` (há mais do que foi visto: a busca continua aberta), `negativo` (não achou nada) ou `pendente-de-acesso`. Um bloqueio (403, 429) ou uma falha do servidor entra como `pendente-de-acesso`, com o motivo, nunca como `negativo`. Antes de buscar, pergunte: `garimpo cobertura consultar <termos>` mostra o que já foi buscado e com que resultado; nenhuma linha quer dizer "nunca buscado".
+**Cobertura.** Toda busca do `garimpo` entra sozinha no registro de cobertura (`--cobertura`, por padrão `cobertura.jsonl` na pasta em que o comando roda): a consulta, o lugar, os anos, o total, os itens vistos e o resultado. Para uma busca feita fora dele, use `garimpo cobertura registrar` no [mesmo registro da pesquisa](../../modelos/pesquisa/README.md#registrar-na-cobertura). O resultado é `lido` (tudo visto), `parcial` (há mais do que foi visto: a busca continua aberta), `negativo` (não achou nada) ou `pendente-de-acesso`. Um bloqueio (403, 429) ou uma falha do servidor entra como `pendente-de-acesso`, com o motivo, nunca como `negativo`. Antes de buscar, pergunte: `garimpo cobertura consultar <termos> --cobertura pesquisa/cobertura.jsonl` mostra o que já foi buscado e com que resultado; nenhuma linha quer dizer "nunca buscado".
 
 **Ponte do navegador.** As rotas `/service/search/…` recusam fora da aba, e o `garimpo` não se disfarça de navegador:
 
@@ -118,7 +118,8 @@ Pronto quando `garimpo ponte estado` responde `ponte ligada`. Se a aba navegar o
 
 - `/platform/tree/persons/{id}/memories` lista as memórias da pessoa. Certidões de inteiro teor enviadas por parentes deram muitas provas A.
 - Memórias privadas respondem 401 ou 403.
-- Selos em retratos (por exemplo, de uma certificação) só aparecem na imagem do retrato. São pista, não documento.
+- `garimpo fs retratos` baixa a miniatura de cada pessoa da varredura que tem retrato. No teste de 25/11/2026, `GET /platform/tree/persons/{id}/portrait` respondeu `307` para `https://tree-portraits-pgp.familysearchcdn.org/<código>/thumb200s.jpg`. A miniatura de 200 × 200 px abriu sem sessão. Nenhum tamanho maior respondeu no mesmo caminho.
+- Para ler um selo pequeno, abra a memória de origem do retrato. O selo vale como pista.
 - Uma certidão moderna é a transcrição do cartório: o livro original não foi visto.
 
 ## Gravação

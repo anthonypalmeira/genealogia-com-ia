@@ -14,7 +14,7 @@ Para as skills, a pasta é `pesquisa/`: um link, na pasta em que a conversa roda
 | `elos/<elo>/pistas/<pista>.yaml` | Uma pista por arquivo, no [formato da régua](../../docs/guias/regua-de-prova.md#formato-de-registro) |
 | `elos/<elo>/recortes/` | Recortes dos documentos lidos |
 | `imagens/<filme>/` | As imagens baixadas de um filme, que servem a vários elos, com o manifesto, as miniaturas e as folhas de contato, o texto puxado (`texto.jsonl`), o mapa do filme (`mapa.md`) e as leituras página a página (`leitura-<AAAA-MM-DD>-<de>-<ate>.md`). Num repositório git, as imagens ficam fora |
-| `cobertura.jsonl` | O registro de buscas, um só para a pesquisa, porque a mesma busca serve a vários elos. Cada busca entra pela receita de [Registrar na cobertura](#registrar-na-cobertura) |
+| `cobertura.jsonl` | O registro de todas as buscas da pesquisa, inclusive as feitas fora do `garimpo`. Uma mesma busca pode servir a vários elos. Veja [Registrar na cobertura](#registrar-na-cobertura) |
 | `alteracoes.jsonl` | O registro do que o `garimpo` gravou no FamilySearch. Passe `--registro pesquisa/alteracoes.jsonl` a toda gravação |
 | `pedidos/<AAAA-MM-DD>-<instituição>.md` | Um pedido a um cartório, uma cúria ou um arquivo, com a situação e o histórico, copiado de [pedido.md](pedido.md). A carta em PDF e cada documento que chegar ficam ao lado, com o mesmo nome e os sufixos `-carta` e `-recebido-<n>` |
 | `catalogos/` | Catálogos e índices de fundos baixados inteiros, para varrer localmente |

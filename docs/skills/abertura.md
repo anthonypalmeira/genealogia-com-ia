@@ -15,7 +15,7 @@ Os passos com que toda skill do kit começa, antes de qualquer busca.
    | O que está pendente de acesso? | As linhas `pendente-de-acesso` da cobertura |
    | Que conversas estão abertas? | A seção Conversas abertas do estado |
 
-   De cada busca vale a linha mais recente da cobertura. Procure também cada grafia no resto de `pesquisa/`: outra conversa pode ter achado a pessoa em outro elo. Pronto quando cada elo tem as cinco respostas, nem que seja "nada".
+   Se um estado antigo traz buscas só na seção **Cobertura fora do garimpo**, [registre as que faltam na cobertura](../../modelos/pesquisa/README.md#registrar-na-cobertura). De cada busca vale a linha mais recente da cobertura. Procure também cada grafia no resto de `pesquisa/`: outra conversa pode ter achado a pessoa em outro elo. Pronto quando cada elo tem as cinco respostas, nem que seja "nada".
 5. **Delegação.** Reparta o trabalho pela regra abaixo.
 
 ## Delegação
