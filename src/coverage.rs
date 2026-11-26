@@ -231,6 +231,7 @@ impl Coverage {
         let recorded = match error {
             Error::Blocked { .. }
             | Error::Restricted { .. }
+            | Error::ImageStorage { .. }
             | Error::Paused { .. }
             | Error::SessionExpired
             // Inside a search, only an answer of FamilySearch is an input

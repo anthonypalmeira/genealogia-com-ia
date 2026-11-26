@@ -572,9 +572,10 @@ pub enum FsCommand {
                       Cada retrato vai para PASTA como `<id>.jpg`, e quem o FamilySearch diz \
                       não ter retrato entra em PASTA/sem-retrato.txt, um id por linha. Repetir \
                       o comando retoma: não pede de novo nem o retrato que está na pasta nem \
-                      quem está na lista. Pessoa fundida ou apagada e imagem que não veio \
-                      inteira ficam pendentes de acesso, com o motivo na saída de erro, e são \
-                      pedidas de novo na próxima vez: não é o mesmo que não ter retrato. \
+                      quem está na lista. Se a pessoa foi fundida ou apagada, o armazenamento \
+                      respondeu fora de 2xx ou a imagem veio incompleta, o retrato fica \
+                      pendente de acesso. O motivo sai na saída de erro. O lote segue e a \
+                      próxima execução pede o retrato de novo. \
                       Linha: retratos baixados agora, já havia, pessoas sem retrato, pendentes \
                       de acesso, pasta.\n\nVeja vários de uma vez com `garimpo imagens folha`. \
                       O retrato é escolhido por usuários da árvore: é pista, nunca prova."

@@ -287,7 +287,7 @@ pub(crate) enum Fetched {
 }
 
 /// Finishes one image, given what FamilySearch answered when asked for it:
-/// transfers it from the signed address, when there is one, checks it and
+/// transfers it from the redirect address, when there is one, checks it and
 /// puts it in `file`, which only exists once the image is whole. A refusal
 /// of this one image, or something that is not an image, leaves it pending.
 pub(crate) fn keep(
@@ -296,8 +296,8 @@ pub(crate) fn keep(
     file: &Path,
 ) -> Result<Fetched, Error> {
     let part = part_path(file);
-    let transferred = asked.and_then(|signed| match signed {
-        Some(signed) => transport.transfer(&signed, &part),
+    let transferred = asked.and_then(|address| match address {
+        Some(address) => transport.transfer(&address, &part),
         None => Ok(()),
     });
     let kept = match transferred.and_then(|()| inspect(&part)) {

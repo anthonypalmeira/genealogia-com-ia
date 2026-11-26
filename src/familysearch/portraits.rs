@@ -71,12 +71,16 @@ pub(super) fn download(
                 none += 1;
                 continue;
             }
-            Ok(address) => match keep(transport, Ok(address), &portrait)? {
-                Fetched::Image(_) => {
+            Ok(address) => match keep(transport, Ok(address), &portrait) {
+                Ok(Fetched::Image(_)) => {
                     new += 1;
                     continue;
                 }
-                Fetched::Pending(reason) => reason,
+                Ok(Fetched::Pending(reason)) => reason,
+                Err(error @ Error::ImageStorage { .. }) => {
+                    format!("{error} ao endereço fixo do retrato")
+                }
+                Err(error) => return Err(error),
             },
             // An answer about this one person: merged, deleted or not found.
             Err(error @ Error::Input(_)) => error.to_string(),

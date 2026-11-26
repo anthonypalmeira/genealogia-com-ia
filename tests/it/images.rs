@@ -290,6 +290,25 @@ fn a_403_that_is_not_about_the_image_is_a_block_and_stops_the_download() {
 }
 
 #[test]
+fn a_refused_signed_address_stops_the_film_download() {
+    let fs = FakeServer::start(|request| match asked(request) {
+        Asked::Signed(1) => Reply::empty(404),
+        _ => open_film(2, request),
+    });
+    let env = TestEnv::logged_in(&fs);
+
+    let refused = env.run(&["imagens", "baixar", FILM, "--paralelo", "1"]);
+    assert_eq!(refused.code, 1, "{}", refused.stderr);
+    assert!(refused.stderr.contains("404"), "{}", refused.stderr);
+    assert!(
+        refused.stderr.contains("endereço assinado"),
+        "{}",
+        refused.stderr
+    );
+    assert_eq!(asked_full(&fs, 2), 0);
+}
+
+#[test]
 fn an_image_that_arrives_cut_short_is_left_pending_access_and_out_of_the_folder() {
     let fs = FakeServer::start(|request| match asked(request) {
         // A PNG that says its size and stops short of its pixels.
