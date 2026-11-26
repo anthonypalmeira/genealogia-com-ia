@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use serde_json::json;
 
 use super::{PersonId, person_id, traversal::Traversal};
@@ -71,12 +71,40 @@ pub(super) fn download(
                 none += 1;
                 continue;
             }
-            Ok(address) => match keep(transport, Ok(address), &portrait)? {
-                Fetched::Image(_) => {
+            Ok(address) => match keep(transport, Ok(address), &portrait) {
+                Ok(Fetched::Image(_)) => {
                     new += 1;
                     continue;
                 }
-                Fetched::Pending(reason) => reason,
+                Ok(Fetched::Pending(reason)) => reason,
+                // A refusal of this one address leaves the person pending. A 429
+                // asks for a pause and a 5xx is the storage failing: both stop
+                // the batch, so no other portrait is asked for meanwhile.
+                Err(error @ Error::ImageStorage { status, .. })
+                    if (400..500).contains(&status) && status != 429 =>
+                {
+                    format!("{error} ao endereço fixo do retrato")
+                }
+                // The address is fixed: asking again gives the same one, so the
+                // only remedy is to wait.
+                Err(Error::ImageStorage {
+                    status,
+                    retry_after,
+                }) => {
+                    let wait = match retry_after {
+                        Some(seconds) if seconds.bytes().all(|b| b.is_ascii_digit()) => {
+                            format!("os {seconds} s que ele pediu")
+                        }
+                        Some(date) => format!("até {date}, como ele pediu"),
+                        None => "alguns minutos".to_owned(),
+                    };
+                    return Err(anyhow!(
+                        "o armazenamento de retratos respondeu {status} ao endereço fixo do \
+                         retrato de {person}; espere {wait} antes de rodar de novo"
+                    )
+                    .into());
+                }
+                Err(error) => return Err(error),
             },
             // An answer about this one person: merged, deleted or not found.
             Err(error @ Error::Input(_)) => error.to_string(),

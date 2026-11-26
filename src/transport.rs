@@ -171,9 +171,8 @@ impl<'a> Transport<'a> {
     }
 
     /// Stores what the address of an image holds in `into`: the signed
-    /// address of a full image, or the address of a portrait. The address is
-    /// the credential, so the session does not go along, and the address
-    /// never goes into an error message.
+    /// address of a film image or the fixed address of a portrait. Neither
+    /// request carries the session or includes the address in an error.
     pub(crate) fn transfer(&self, address: &str, into: &Path) -> Result<(), Error> {
         let mut response = self.agent.get(address).call().map_err(|error| {
             let cause = match error {
@@ -185,14 +184,13 @@ impl<'a> Transport<'a> {
         })?;
         let status = response.status().as_u16();
         if !(200..=299).contains(&status) {
-            // Not a restriction: FamilySearch had already granted the image.
-            // A signed address is refused when it expires, and asking again
-            // gives another one.
-            return Err(anyhow!(
-                "o armazenamento de imagens respondeu {status} ao endereço assinado; repita o \
-                 comando para pedir outro"
-            )
-            .into());
+            let retry_after = response.headers().get("retry-after");
+            return Err(Error::ImageStorage {
+                status,
+                retry_after: retry_after
+                    .and_then(|value| value.to_str().ok())
+                    .map(|value| value.trim().to_owned()),
+            });
         }
         File::create(into)
             .and_then(|mut file| io::copy(&mut response.body_mut().as_reader(), &mut file))

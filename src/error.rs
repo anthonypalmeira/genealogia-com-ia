@@ -44,6 +44,13 @@ pub enum Error {
     /// a block of the account, and not a missing image.
     #[error("acesso restrito: {what} foi recusado a esta conta (403)")]
     Restricted { what: String },
+    /// The storage returned a non-success status at a redirected image address.
+    #[error("o armazenamento de imagens respondeu {status}")]
+    ImageStorage {
+        status: u16,
+        /// `Retry-After` as the storage sent it: seconds or an HTTP date.
+        retry_after: Option<String>,
+    },
     /// FamilySearch asked for a pause longer than the command accepts to wait.
     #[error("bloqueio: o FamilySearch pediu uma pausa e ainda faltam {seconds} s")]
     Paused { seconds: u64 },
@@ -76,7 +83,7 @@ impl Error {
     #[must_use = "the code is only useful to end the process with it"]
     pub fn exit_code(&self) -> u8 {
         match self {
-            Self::Other(_) => 1,
+            Self::Other(_) | Self::ImageStorage { .. } => 1,
             Self::Input(_) => 2,
             Self::SessionMissing | Self::SessionExpired => 3,
             Self::Blocked { .. } | Self::Restricted { .. } | Self::Paused { .. } => 4,
@@ -93,6 +100,9 @@ impl Error {
     pub fn next_step(&self) -> String {
         match self {
             Self::Other(_) => "leia a causa acima; se for passageira, rode de novo".into(),
+            Self::ImageStorage { .. } => {
+                "repita o comando para pedir outro endereço assinado da imagem de filme".into()
+            }
             Self::Input(_) => "corrija a entrada (veja `garimpo --help`) e rode de novo".into(),
             Self::SessionMissing | Self::SessionExpired => {
                 "abra https://www.familysearch.org/tree/pedigree/landscape no navegador do \
