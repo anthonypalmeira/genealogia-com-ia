@@ -40,8 +40,9 @@ A consulta leva o que foi procurado e todas as grafias de cada pessoa procurada:
 1. Pergunte ao usuário onde a pasta fica, fora do kit, e crie-a. Na pasta em que a conversa roda, rode `ln -s <caminho da pasta> pesquisa`; se a conversa já roda dentro da pasta da pesquisa, `ln -s . pesquisa`.
 2. Copie para a pasta o que ela ainda não tem de [perfil.md](perfil.md) e [linhagens.md](linhagens.md).
 3. Preencha o perfil com o que o pedido já disse e pergunte o resto numa mensagem só.
+4. Na mesma mensagem, pergunte que notas o pesquisador já decidiu antes de usar o kit. Para cada decisão, [abra o elo](#abrir-um-elo) se preciso e registre-a na seção Decisão do pesquisador do `estado.md`, com a data e o lugar de origem (por exemplo, relatório e página). No topo do estado, ponha a nota decidida em `filiacao` ou `identidade`, conforme o caso.
 
-Pronto quando `pesquisa/perfil.md` não tem mais nenhum campo entre `<` e `>`.
+Pronto quando `pesquisa/perfil.md` não tem mais nenhum campo entre `<` e `>` e cada decisão anterior está no estado do elo.
 
 ## Abrir um elo
 
