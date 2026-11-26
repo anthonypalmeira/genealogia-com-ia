@@ -125,21 +125,22 @@ pub(super) fn list(config: &Config, file: &Path) -> Result<(), Error> {
             .join(" / ");
         let facts = person.facts.iter().map(|fact| {
             let kind = fact.fact_type.to_string();
-            let date = fact.date.as_ref().and_then(|date| {
-                let formal = || date.formal.as_ref().map(ToString::to_string);
-                date.original.clone().or_else(formal)
-            });
+            let date = fact.date.as_ref();
+            let formal = date
+                .and_then(|date| date.formal.as_ref())
+                .map(ToString::to_string);
+            let date = match formal.as_deref() {
+                // Keep the GEDCOM X notation for ranges and recurring dates.
+                Some(text) if text.contains('/') => Some(text),
+                Some(text) => Some(text.trim_start_matches('+')),
+                None => date.and_then(|date| date.original.as_deref()),
+            };
             let place = fact
                 .place
                 .as_ref()
                 .and_then(|place| place.original.as_deref());
             // The type as GEDCOM X names it, without the address before it.
-            let parts = [
-                kind.rsplit('/').next(),
-                fact.value.as_deref(),
-                date.as_deref(),
-                place,
-            ];
+            let parts = [kind.rsplit('/').next(), fact.value.as_deref(), date, place];
             field(Some(
                 parts.into_iter().flatten().collect::<Vec<_>>().join(" "),
             ))
