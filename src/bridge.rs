@@ -34,7 +34,7 @@ use tiny_http::{Header, Method, Server};
 use crate::{
     cli::{BridgeCommand, Config},
     error::Error,
-    session::random_string,
+    session::{Token, random_string},
 };
 
 /// How long the bridge holds the tab's request for work before answering
@@ -59,6 +59,8 @@ enum Request {
     Fetch {
         path: String,
     },
+    /// Read the page's session.
+    Session,
     /// Tell whether a tab is attached.
     Status,
     Close,
@@ -172,6 +174,26 @@ pub(crate) fn fetch(dir: &Path, path: &str) -> Result<Answer, Error> {
     }
 }
 
+/// The page's session, read in the logged tab. The value goes from the tab to
+/// this process only: it never shows in a message.
+///
+/// Returns `Error::BridgeDetached` when no tab is running the bridge's loop,
+/// and `Error::SessionMissing` when the page has no session.
+pub(crate) fn session(dir: &Path) -> Result<Token, Error> {
+    match ask(dir, &Request::Session)? {
+        None | Some(Reply::NoTab) => Err(Error::BridgeDetached),
+        Some(Reply::Answer(Answer {
+            status: 200,
+            body: Some(value),
+            ..
+        })) => Token::new(&value),
+        Some(Reply::Answer(_)) => Err(Error::SessionMissing),
+        Some(Reply::NoAnswer) => Err(anyhow!("a aba não entregou a sessão a tempo").into()),
+        Some(Reply::Error(_)) => Err(anyhow!("a aba não conseguiu ler a sessão").into()),
+        Some(Reply::Tab(_)) => Err(anyhow!("a ponte respondeu algo inesperado").into()),
+    }
+}
+
 /// Sends one request to the bridge and reads its reply. `None` when no bridge
 /// is open, or when the bridge closes instead of replying.
 fn ask(dir: &Path, request: &Request) -> Result<Option<Reply>, Error> {
@@ -279,9 +301,10 @@ enum Event {
     },
     /// The tab is done with a request.
     Done(Done),
-    /// A command asks for a request to be made.
-    Fetch {
-        path: String,
+    /// A command asks the tab for work: `{"path": …}` makes a GET, and
+    /// `{"session": true}` reads the page's session.
+    Work {
+        work: Value,
         reply: SyncSender<Reply>,
     },
     /// A command asks whether a tab is attached.
@@ -480,7 +503,14 @@ fn attend(listener: &UnixListener, events: &SyncSender<Event>) -> Option<UnixStr
         };
         let (reply, answer) = mpsc::sync_channel(1);
         let event = match request {
-            Request::Fetch { path } => Event::Fetch { path, reply },
+            Request::Fetch { path } => Event::Work {
+                work: json!({ "path": path }),
+                reply,
+            },
+            Request::Session => Event::Work {
+                work: json!({ "session": true }),
+                reply,
+            },
             Request::Status => Event::Status { reply },
             Request::Close => {
                 // If the other side is already gone, the bridge is closing anyway.
@@ -618,11 +648,12 @@ impl<'a> Tab<'a> {
                         });
                     }
                 }
-                Ok(Event::Fetch { path, reply }) => {
+                Ok(Event::Work { mut work, reply }) => {
                     self.last_id += 1;
+                    work["id"] = self.last_id.into();
                     self.job = Some(Job {
                         id: self.last_id,
-                        work: json!({"id": self.last_id, "path": path}).to_string(),
+                        work: work.to_string(),
                         reply,
                         stage: Stage::Waiting(now),
                     });

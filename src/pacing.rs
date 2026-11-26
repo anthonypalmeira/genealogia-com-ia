@@ -92,17 +92,21 @@ impl Turn {
         })
     }
 
-    /// How long until the next request fits the pause and the window budget.
-    ///
-    /// Returns `Error::SessionCap` once the session has made every request it
-    /// was allowed.
-    pub(crate) fn wait(&self, config: &Config, now_ms: u64) -> Result<Duration, Error> {
-        let state = &self.state;
-        if state.session_requests >= config.session_cap {
+    /// Returns `Error::SessionCap` once the held session has made every
+    /// request it was allowed.
+    pub(crate) fn capped(&self, config: &Config) -> Result<(), Error> {
+        if self.state.session_requests >= config.session_cap {
             return Err(Error::SessionCap {
                 cap: config.session_cap,
             });
         }
+        Ok(())
+    }
+
+    /// How long until the next request fits the pause and the window budget.
+    #[must_use = "the request must wait this long"]
+    pub(crate) fn wait(&self, config: &Config, now_ms: u64) -> Duration {
+        let state = &self.state;
         let in_window = || {
             state
                 .window
@@ -119,10 +123,15 @@ impl Turn {
             free_at_ms = spend.leaves_window_ms(config);
         }
         let until_ms = free_at_ms.max(state.paused_until_ms);
-        Ok(Duration::from_millis(until_ms.saturating_sub(now_ms)))
+        Duration::from_millis(until_ms.saturating_sub(now_ms))
     }
 
-    /// Counts one request, with the cost the server reported and the pause it
+    /// Counts one request against the held session's cap. `record` saves it.
+    pub(crate) fn count(&mut self) {
+        self.state.session_requests += 1;
+    }
+
+    /// Records one request, with the cost the server reported and the pause it
     /// asked for, and saves the state. The turn goes on until it is dropped.
     pub(crate) fn record(
         &mut self,
@@ -142,7 +151,6 @@ impl Turn {
             at_ms: now_ms,
             cost_ms,
         });
-        self.state.session_requests += 1;
         if let Some(pause) = pause {
             self.state.paused_until_ms = now_ms.saturating_add(millis(pause));
         }

@@ -112,6 +112,8 @@ pub(crate) struct Transport<'a> {
     agent: Agent,
     /// The session of the first request. One command never spans two sessions.
     token: OnceLock<Token>,
+    /// A session to check before it is held: used instead of the held one.
+    unheld: Option<&'a Token>,
 }
 
 impl<'a> Transport<'a> {
@@ -120,6 +122,16 @@ impl<'a> Transport<'a> {
             config,
             agent: agent(),
             token: OnceLock::new(),
+            unheld: None,
+        }
+    }
+
+    /// Requests made with `token`, a session not held yet, to check it. A 401
+    /// leaves the held session alone, since it is not that one.
+    pub(crate) fn with_session(config: &'a Config, token: &'a Token) -> Self {
+        Self {
+            unheld: Some(token),
+            ..Self::new(config)
         }
     }
 
@@ -213,11 +225,16 @@ impl<'a> Transport<'a> {
                 status: 429,
                 path: path.to_owned(),
             };
-            let wait = match turn.wait(self.config, now_ms()?) {
-                // The blocked request was the last one the cap allowed.
-                Err(Error::SessionCap { .. }) if attempt > 0 => return Err(blocked()),
-                wait => wait?,
-            };
+            // A session not held yet is checked outside the held one's cap; the
+            // pause and the window still hold, since they belong to the account.
+            if self.unheld.is_none() {
+                match turn.capped(self.config) {
+                    // The blocked request was the last one the cap allowed.
+                    Err(Error::SessionCap { .. }) if attempt > 0 => return Err(blocked()),
+                    capped => capped?,
+                }
+            }
+            let wait = turn.wait(self.config, now_ms()?);
             // A pause counts from the millisecond after the answer, so one
             // of exactly the longest wait shows as a millisecond more.
             let longest = Duration::from_secs(self.config.max_wait_s);
@@ -252,6 +269,9 @@ impl<'a> Transport<'a> {
                 Err(error @ Error::BridgeDetached) => return Err(error),
                 Err(error) => {
                     // The request may have reached the server, so it still counts.
+                    if self.unheld.is_none() {
+                        turn.count();
+                    }
                     turn.record(self.config, now_ms()?, millis(started.elapsed()), None)?;
                     return Err(error);
                 }
@@ -285,7 +305,11 @@ impl<'a> Transport<'a> {
             };
             // The count and the pause are saved from the headers alone, before any
             // body is read, so a body that stalls or breaks cannot lose them. The
-            // turn itself goes on while the body is read.
+            // turn itself goes on while the body is read. A session being
+            // checked spends the account's window, not the held session's cap.
+            if self.unheld.is_none() {
+                turn.count();
+            }
             turn.record(self.config, now_ms()?, cost_ms, pause)?;
             match status {
                 200..=299 => {
@@ -365,9 +389,12 @@ impl<'a> Transport<'a> {
                         // The session is dead: drop it, so the next command does
                         // not even try. A newer session delivered meanwhile is
                         // left alone.
-                        Way::Direct(token) => session::expire(&self.config.dir, token)?,
-                        // The tab's session is the browser's to renew.
-                        Way::Tab => {}
+                        Way::Direct(token) if self.unheld.is_none() => {
+                            session::expire(&self.config.dir, token)?;
+                        }
+                        // A session being checked is not held; the tab's
+                        // session is the browser's to renew.
+                        Way::Direct(_) | Way::Tab => {}
                     }
                     return Err(Error::SessionExpired);
                 }
@@ -422,6 +449,9 @@ impl<'a> Transport<'a> {
     /// If that is no longer the session the command started with, it stops: a
     /// check made in one session must not be followed by a write in another.
     fn token(&self) -> Result<&Token, Error> {
+        if let Some(token) = self.unheld {
+            return Ok(token);
+        }
         let current = session::token(&self.config.dir)?;
         match self.token.get() {
             None => Ok(self.token.get_or_init(|| current)),

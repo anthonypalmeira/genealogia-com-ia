@@ -376,14 +376,25 @@ pub enum Command {
 pub enum SessionCommand {
     #[command(
         name = "entregar",
-        about = "Guarda a sessão do navegador logado, lida da entrada padrão",
-        long_about = "Guarda a sessão do navegador logado, lida da entrada padrão.\n\nO token é \
-                      o valor do cookie `fssessionid` da aba logada. Entregue-o uma vez por \
-                      login: `printf %s \"$TOKEN\" | garimpo sessao entregar`. Ele fica só na \
-                      memória de um processo guardião e nunca vai para o disco. Uma entrega \
-                      nova troca a sessão e zera a contagem do teto."
+        about = "Guarda a sessão do navegador logado, lida da entrada padrão ou, com --pela-ponte, da aba",
+        long_about = "Guarda a sessão do navegador logado, lida da entrada padrão ou, com \
+                      --pela-ponte, da aba ligada à ponte.\n\nO token é o valor do cookie \
+                      `fssessionid` da aba logada. Com a ponte aberta e o trecho avaliado na \
+                      aba, `garimpo sessao entregar --pela-ponte` o lê na aba, confere no \
+                      FamilySearch e só então o guarda: o valor não passa pela conversa nem \
+                      aparece na saída. Sem a ponte, entregue-o pela entrada padrão: \
+                      `printf %s \"$TOKEN\" | garimpo sessao entregar`. Ele fica só na memória \
+                      de um processo guardião e nunca vai para o disco. Uma entrega nova troca \
+                      a sessão e zera a contagem do teto. Sai com 7 sem aba ligada e com 3 se a \
+                      aba não tem sessão ou a sessão dela não vale; a sessão anterior continua."
     )]
-    Deliver,
+    Deliver {
+        #[arg(
+            long = "pela-ponte",
+            help = "Lê a sessão na aba ligada à ponte e a confere antes de guardar"
+        )]
+        through_bridge: bool,
+    },
     #[command(
         name = "oauth",
         about = "Faz o login pela API oficial (OAuth com PKCE), para quem tem chave de app",

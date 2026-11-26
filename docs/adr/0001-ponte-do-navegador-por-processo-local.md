@@ -22,7 +22,7 @@ Não foi verificado com o FamilySearch logado: a aba do teste não tinha sessão
 
 ## Consequências
 
-- O token não sai da aba. Com a ponte, as rotas do site dispensam `garimpo sessao entregar`.
+- O token não sai da aba para fazer as buscas: com a ponte, as rotas do site dispensam `garimpo sessao entregar`. Para as rotas da API, `garimpo sessao entregar --pela-ponte` leva a sessão da aba ao guardião pelo mesmo canal local, sem passar pela conversa.
 - Toda requisição pela ponte passa pelo mesmo regulador das diretas: trava da conta, orçamento, teto da sessão e `Retry-After`.
 - A ponte só atende a página da origem de `--fs-site` (CORS) que conhece o segredo do endereço. Os comandos falam com ela por um soquete Unix na pasta de estado.
 - Ela faz um pedido por vez, só GET e só texto. Baixar imagens pela aba vai exigir respostas binárias.
