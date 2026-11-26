@@ -22,7 +22,7 @@ A nota depende do que o documento **diz**, não só do tipo dele. Faça quatro p
 
 Regras que valem para toda a tabela:
 
-- Só sobe nota o que foi lido na imagem.
+- Para subir a nota, leia na imagem o trecho que sustenta o elo. Para edições de fontes e obras secundárias, aplique as regras de [Ed] e [S] abaixo.
 - Uma linhagem vale o seu elo mais fraco.
 - A identidade ("é a mesma pessoa?") tem nota própria, na seção [Identidade](#identidade).
 - Diga sempre o que o documento prova, o que não prova e o que subiria a nota.
@@ -34,11 +34,13 @@ Marque cada achado com o modo como foi visto:
 | Etiqueta | Significado | Efeito na nota |
 |---|---|---|
 | **[V]** | Lido na imagem do documento | Vale a nota do documento |
-| **[Ed]** | Edição impressa de fonte primária | Vale a nota do documento, com a etiqueta; ler o manuscrito tira a ressalva |
+| **[Ed]** | Edição impressa de fontes primárias, como uma série de inventários ou de autos judiciais | Vale a nota do documento, com a etiqueta |
 | **[T]** | Transcrição automática (OCR ou IA) | Sem nota: só localiza |
 | **[I]** | Índice | D sozinho; C com outro documento lido |
 | **[Cat]** | Catálogo ou ficha | Prova que o documento existe, não o que ele diz |
-| **[S]** | Livro ou outra obra secundária | Veja [Livros de genealogia](#livros-de-genealogia) |
+| **[S]** | Obra secundária, inclusive a transcrição que um livro de genealogia cita | Aplique a regra de [Livros de genealogia](#livros-de-genealogia) e o perfil da pesquisa |
+
+Troque [Ed] ou [S] por [V] quando ler o trecho decisivo na imagem do manuscrito. Se o sobrenome no testamento de Honorato Vidigal só se lê na transcrição de um livro de genealogia e está ilegível no manuscrito, o sobrenome continua [S].
 
 ## Nota por tipo de documento
 
@@ -46,9 +48,10 @@ Marque cada achado com o modo como foi visto:
 |---|---|---|---|
 | Casamento religioso | **A**: é o que mais vale | Nomeia os pais dos dois noivos; testemunhas parentes | Só índice; lido em parte; nomeia só um dos pais (A só para esse) |
 | Processo matrimonial ou dispensa | **A** para os noivos; a dispensa por consanguinidade vale A para cada geração até o tronco comum, se a árvore for lida | Testemunhas que declaram parentesco | Só a primeira folha vista; livro de registro de dispensas, sem a árvore (pista) |
-| Registro civil de nascimento | **A** | Contemporâneo; avós dos dois lados lidos na imagem | Tardio (veja abaixo); registro de um irmão ou neto prova o elo de cima, não o da pessoa |
-| Registro civil de casamento | **A** | Declara os pais falecidos, com as datas | Só índice; certidão moderna sem ver o livro (A com ressalva) |
+| Registro civil de nascimento | **A** | Contemporâneo; avós dos dois lados lidos na imagem | [Registro tardio](#registro-tardio); registro de um irmão ou neto sem declaração da própria pessoa prova o elo de cima, não o da pessoa |
+| Registro civil de casamento | **A** | Declara os pais falecidos, com as datas | Só índice |
 | Registro civil de óbito | **B**: nomeia só os pais | Lista os filhos do morto (A para filho → pai) | Declarante sem parentesco (D) |
+| Certidão moderna de registro civil ou eclesiástico, inclusive a transcrição certificada pelo paleógrafo do arquivo | Nota do registro para o trecho certificado, **com ressalva (livro não visto)** | Ler o trecho no livro tira a ressalva | Uma certidão da primeira folha de um processo matrimonial só sustenta o que essa folha declara |
 | Inventário | **A** só se o título de herdeiros ou um termo **declara** a filiação | Idades no título; petições e recibos do maço ("meu irmão", "meu pai"); um bem nomeado que se cruza com outro documento | Só cita a pessoa como confrontante, credor ou "cunhado" (C). A pessoa faltar entre os herdeiros é indício contra, não F: um filho morto antes, sem descendentes, não herda |
 | Partilha | **A** | Julgada e paga, com recibos | Só pedida: pista de existência incerta |
 | Testamento | **A** | Do cônjuge, com "filha legítima de…" (A para o colateral); reconhece filhos naturais | Sobrenome ilegível. O testamento do suposto pai que nomeia todos os filhos, sem a pessoa, dá F só quando outro documento mostra a pessoa viva naquela data |
@@ -69,13 +72,13 @@ Um livro de genealogia vale **conforme o autor e a idade da obra**. Obra antiga 
 
 - Sobe quando o autor cita a fonte primária, quando o destinatário já aceitou o elo e quando a obra não se contradiz.
 - Desce quando não há referências ou quando outra entrada da mesma obra diz o contrário.
-- Em qualquer caso, procure a primária por trás: a citação levada ao original troca [S] por [V].
+- Em qualquer caso, procure a fonte primária que o autor usou.
 
 ### Registro tardio
 
 O registro feito muito depois do fato vale **B** por padrão: o contemporâneo vence o tardio.
 
-- Vale **A** quando a própria pessoa declara os pais e outros registros concordam.
+- Vale **A** quando a própria pessoa declara os pais, mesmo no registro tardio de outra pessoa, e ao menos um outro documento lido na imagem confirma o casal, sem contradição. Eufrásia Quintanilha, ao registrar tarde o nascimento da filha, declara os próprios pais como avós maternos. O casamento deles [V] confirma o casal, mesmo sem citar Eufrásia.
 - Sem avós e com declarante distante, vale **D**.
 - Quando dois registros tardios discordam, o elo fica "contestado": analise quem declarou e o que mais essa pessoa errou no mesmo dia.
 
@@ -93,6 +96,18 @@ Quando o pesquisador decide uma nota diferente da régua, registre no elo a nota
 
 **Aceite só com pelo menos duas âncoras e nenhuma contradição.** Registre cada homônimo rejeitado com o fato que conflita.
 
+| Nota de identidade | Quando dar |
+|---|---|
+| **A** | Pelo menos duas âncoras diretas e fortes coincidem nos documentos lidos, sem contradição nem variante de nome por explicar |
+| **B** | Pelo menos duas âncoras, uma delas direta. Para chegar a duas, é preciso contar uma âncora fraca ou indireta, ou há variante de nome por explicar |
+| **C forte** | Duas ou mais âncoras, todas indiretas |
+| **C** | Uma única âncora |
+| **D** | Identidade suposta, sem âncora |
+| **F** | Um documento exclui a identidade, mesmo que haja âncoras em comum |
+| **∅** | Sem fonte para avaliar a identidade |
+
+Uma âncora direta é um dado que os documentos atribuem à própria pessoa, como o cônjuge. Vizinhança e padrão de nomes ligam as pessoas por indícios. Se dois assentos dão a Eufrásia Maria Quintanilha e a Eufrásia Rosa Quintanilha o mesmo marido e a mesma capela, a identidade fica em B enquanto o segundo nome divergir sem explicação.
+
 | Âncora | Exemplo |
 |---|---|
 | Nomes completos dos pais ou do cônjuge | Os pais do batismo são os do testamento |
@@ -109,7 +124,6 @@ Quando o pesquisador decide uma nota diferente da régua, registre no elo a nota
 
 - Descarte um candidato só pelo que o documento diz (cônjuge, pais, herdeiros), nunca pelo ano que está na árvore.
 - Dois batismos são duas pessoas: fusão, só com prova e com pergunta ao usuário.
-- Quando todas as âncoras são indiretas, o resultado é C forte.
 
 ## Pistas
 
