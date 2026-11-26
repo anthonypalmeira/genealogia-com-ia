@@ -9,7 +9,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 use serde_json::json;
 
 use super::{PersonId, person_id, traversal::Traversal};
@@ -84,6 +84,15 @@ pub(super) fn download(
                     if (400..500).contains(&status) && status != 429 =>
                 {
                     format!("{error} ao endereço fixo do retrato")
+                }
+                // The address is fixed: asking again gives the same one, so the
+                // only remedy is to wait.
+                Err(Error::ImageStorage { status }) => {
+                    return Err(anyhow!(
+                        "o armazenamento de retratos respondeu {status} ao endereço fixo do \
+                         retrato de {person}; espere alguns minutos antes de rodar de novo"
+                    )
+                    .into());
                 }
                 Err(error) => return Err(error),
             },
