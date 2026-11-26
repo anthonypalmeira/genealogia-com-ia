@@ -251,21 +251,29 @@ fn tab_with(env: &TestEnv, fs: &FakeServer, cookie: Option<&str>) -> FakeTab {
     FakeTab::attach(opened["endereco"].as_str().unwrap(), fs.url(), cookie)
 }
 
-/// A fake FamilySearch that knows only the session `valid`.
-fn knowing(valid: &'static str) -> FakeServer {
-    FakeServer::start(move |request| {
-        if request.header("Authorization") == Some(format!("Bearer {valid}").as_str()) {
+/// A fake FamilySearch that knows only the sessions in `valid`, and answers
+/// `sessao-vazia` with no user at all.
+fn knowing(valid: &'static [&'static str]) -> FakeServer {
+    FakeServer::start(move |request| match request.header("Authorization") {
+        Some("Bearer sessao-vazia") => Reply::empty(204),
+        Some(header)
+            if valid
+                .iter()
+                .any(|token| header == format!("Bearer {token}")) =>
+        {
             Reply::recorded("current-user.json")
-        } else {
-            Reply::empty(401)
         }
+        _ => Reply::empty(401),
     })
 }
 
 #[test]
 fn the_tab_hands_over_its_session_checked_and_never_shown() {
-    let fs = knowing("sessao-da-aba");
-    let env = TestEnv::new(&fs);
+    let fs = knowing(&[TOKEN, "sessao-da-aba"]);
+    // The held session already made every request its cap allows: the new
+    // one is checked outside that cap.
+    let env = TestEnv::logged_in(&fs).with_var("GARIMPO_TETO_SESSAO", "1");
+    assert_eq!(env.run(&["sessao", "conferir"]).code, 0);
     let tab = tab_with(&env, &fs, Some("sessao-da-aba"));
 
     let delivered = env.run(&["sessao", "entregar", "--pela-ponte"]);
@@ -297,8 +305,12 @@ fn the_tab_hands_over_its_session_checked_and_never_shown() {
 
 #[test]
 fn a_stale_or_missing_session_in_the_tab_keeps_the_held_one() {
-    for cookie in [Some("sessao-velha"), None] {
-        let fs = knowing(TOKEN);
+    for (cookie, code) in [
+        (Some("sessao-velha"), 3),
+        (Some("sessao-vazia"), 1),
+        (None, 3),
+    ] {
+        let fs = knowing(&[TOKEN]);
         let env = TestEnv::logged_in(&fs);
         let tab = tab_with(&env, &fs, cookie);
 
@@ -306,7 +318,7 @@ fn a_stale_or_missing_session_in_the_tab_keeps_the_held_one() {
         drop(tab);
         let checked = env.run(&["sessao", "conferir"]);
 
-        assert_eq!(delivered.code, 3, "{cookie:?}: {}", delivered.stderr);
+        assert_eq!(delivered.code, code, "{cookie:?}: {}", delivered.stderr);
         assert_eq!(checked.code, 0, "{cookie:?}: {}", checked.stderr);
     }
 }

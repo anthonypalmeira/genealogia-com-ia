@@ -95,8 +95,8 @@ impl Error {
             Self::Other(_) => "leia a causa acima; se for passageira, rode de novo".into(),
             Self::Input(_) => "corrija a entrada (veja `garimpo --help`) e rode de novo".into(),
             Self::SessionMissing | Self::SessionExpired => {
-                "abra https://www.familysearch.org no navegador do agente e espere o usuário \
-                 entrar ali; rode `garimpo ponte abrir`, avalie o trecho na aba, entregue a \
+                "abra https://www.familysearch.org/tree/pedigree/landscape no navegador do \
+                 agente e espere o usuário entrar até a árvore aparecer; rode `garimpo ponte abrir`, avalie o trecho na aba, entregue a \
                  sessão com `garimpo sessao entregar --pela-ponte` e rode de novo (sem \
                  navegador, peça ao usuário para entrar no FamilySearch)"
                     .into()

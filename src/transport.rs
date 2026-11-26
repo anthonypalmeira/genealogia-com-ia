@@ -225,11 +225,16 @@ impl<'a> Transport<'a> {
                 status: 429,
                 path: path.to_owned(),
             };
-            let wait = match turn.wait(self.config, now_ms()?) {
-                // The blocked request was the last one the cap allowed.
-                Err(Error::SessionCap { .. }) if attempt > 0 => return Err(blocked()),
-                wait => wait?,
-            };
+            // A session not held yet is checked outside the held one's cap; the
+            // pause and the window still hold, since they belong to the account.
+            if self.unheld.is_none() {
+                match turn.capped(self.config) {
+                    // The blocked request was the last one the cap allowed.
+                    Err(Error::SessionCap { .. }) if attempt > 0 => return Err(blocked()),
+                    capped => capped?,
+                }
+            }
+            let wait = turn.wait(self.config, now_ms()?);
             // A pause counts from the millisecond after the answer, so one
             // of exactly the longest wait shows as a millisecond more.
             let longest = Duration::from_secs(self.config.max_wait_s);
@@ -377,9 +382,12 @@ impl<'a> Transport<'a> {
                         // The session is dead: drop it, so the next command does
                         // not even try. A newer session delivered meanwhile is
                         // left alone.
-                        Way::Direct(token) => session::expire(&self.config.dir, token)?,
-                        // The tab's session is the browser's to renew.
-                        Way::Tab => {}
+                        Way::Direct(token) if self.unheld.is_none() => {
+                            session::expire(&self.config.dir, token)?;
+                        }
+                        // A session being checked is not held; the tab's
+                        // session is the browser's to renew.
+                        Way::Direct(_) | Way::Tab => {}
                     }
                     return Err(Error::SessionExpired);
                 }

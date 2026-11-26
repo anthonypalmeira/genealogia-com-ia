@@ -65,7 +65,7 @@ Escolher quais documentos e páginas entram num relatório é decisão do autor.
 ### Sessão e acesso
 
 - Confira a sessão do FamilySearch antes de um trabalho longo, com `garimpo sessao conferir`. Se sair com 3, entregue a sessão sem pedir nada no chat:
-  1. Abra `https://www.familysearch.org` no navegador do agente e mostre a aba ao usuário. Se o site pedir login, espere o usuário entrar ali.
+  1. Abra `https://www.familysearch.org/tree/pedigree/landscape` no navegador do agente e mostre a aba ao usuário. A página inicial abre mesmo sem login; esta pede login quando falta. Espere o usuário entrar até a árvore aparecer.
   2. Rode `garimpo ponte abrir` e avalie na aba o trecho que ele imprime.
   3. Rode `garimpo sessao entregar --pela-ponte`: ele lê a sessão na aba, confere no FamilySearch e só então a guarda. O token não passa pela conversa.
   4. Confira com `garimpo sessao conferir`. Se a entrega sair com 3, a aba não está logada: volte ao passo 1.

@@ -100,7 +100,7 @@ pub(crate) fn run(config: &Config, command: &SessionCommand) -> Result<(), Error
             let token = bridge::session(&config.dir)?;
             // Checked with this very token, before it replaces the held one: a
             // stale cookie leaves the previous session in place.
-            Transport::with_session(config, &token).get("/platform/users/current")?;
+            CurrentUser::fetch(&Transport::with_session(config, &token))?;
             deliver(config, &token)?;
             config.print("sessao guardada", &json!({"sessao": "guardada"}))?;
         }

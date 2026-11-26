@@ -189,9 +189,7 @@ pub(crate) fn session(dir: &Path) -> Result<Token, Error> {
         })) => Token::new(&value),
         Some(Reply::Answer(_)) => Err(Error::SessionMissing),
         Some(Reply::NoAnswer) => Err(anyhow!("a aba não entregou a sessão a tempo").into()),
-        Some(Reply::Error(error)) => {
-            Err(anyhow!("a aba não conseguiu ler a sessão: {error}").into())
-        }
+        Some(Reply::Error(_)) => Err(anyhow!("a aba não conseguiu ler a sessão").into()),
         Some(Reply::Tab(_)) => Err(anyhow!("a ponte respondeu algo inesperado").into()),
     }
 }
