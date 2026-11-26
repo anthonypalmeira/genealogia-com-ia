@@ -420,7 +420,7 @@ pub enum SessionCommand {
         name = "conferir",
         about = "Confere no FamilySearch se a sessão guardada ainda vale. Sai com 3 se não vale",
         long_about = "Confere no FamilySearch se a sessão guardada ainda vale. Sai com 3 se não \
-                      vale.\n\nRode antes de um trabalho longo."
+                      vale.\n\nMostra o agente da árvore e a pessoa da conta, quando informados."
     )]
     Check,
     #[command(name = "encerrar", about = "Descarta a sessão guardada")]
@@ -469,7 +469,7 @@ pub enum FsCommand {
     },
     #[command(
         name = "fontes",
-        about = "As fontes anexadas a uma pessoa. Linha: id da fonte, título, URL"
+        about = "As fontes anexadas a uma pessoa. Linha: id da fonte, título, URL, agente, data UTC, evento (`criacao` do anexo ou, sem ela, a última `alteracao`), autoria desse agente"
     )]
     Sources {
         #[arg(value_name = "ID")]
@@ -477,7 +477,7 @@ pub enum FsCommand {
     },
     #[command(
         name = "notas",
-        about = "As notas de uma pessoa. Linha: assunto, texto"
+        about = "As notas de uma pessoa. Linha: assunto, texto, agente, data UTC, evento (`criacao` ou, sem ela, a última `alteracao`), autoria desse agente"
     )]
     Notes {
         #[arg(value_name = "ID")]
