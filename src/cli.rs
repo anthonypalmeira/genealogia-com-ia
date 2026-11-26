@@ -362,7 +362,12 @@ pub enum Command {
                       quebra marcado com ⚠ no desenho e listado na saída de erro: todo elo tem \
                       nota e documento; as datas são possíveis; os elos diretos formam uma \
                       linha só, ligada a todas as pessoas. O elo mais fraco da linha direta \
-                      sai em destaque. Mostre no máximo ~20 pessoas por desenho."
+                      sai em destaque. Mostre no máximo ~20 pessoas por desenho.\n\n\
+                      A linhagem não informa o sexo. O diagrama usa a regra do pai ou de \
+                      sexo desconhecido: 12 a 80 anos no nascimento do filho, que pode nascer \
+                      até um ano depois da morte. Em `fs caminhos`, a regra da mãe (sexo \
+                      feminino na árvore) marca idade fora de 12 a 55 anos ou nascimento \
+                      posterior à morte dela."
     )]
     Diagram(DiagramArgs),
 }
@@ -538,14 +543,15 @@ pub enum FsCommand {
                       nome e nascimento do filho, id, nome, nascimento e morte do pai ou da \
                       mãe, aviso. Um alvo que não está no arquivo não imprime linha: sai um \
                       aviso na saída de erro. Isso só diz que a varredura não chegou a ele: o \
-                      arquivo pode estar incompleto, e a árvore também.\n\nO aviso marca o elo cujas datas não podem ser as duas verdadeiras, \
-                      pela mesma regra do `garimpo diagrama`: o pai ou a mãe teria menos de 12 \
-                      ou mais de 80 anos, ou o filho nasceu mais de um ano depois da morte. A \
-                      conta usa o mês e o dia quando as duas datas os têm na forma padrão do \
-                      FamilySearch; de uma data só digitada vale o ano, e um intervalo na \
-                      forma padrão não conta como data. Um elo assim tem a \
-                      data ou o parentesco errado na árvore: continua no caminho, com a marca. \
-                      A árvore só indica os caminhos; a prova de cada elo vem dos documentos."
+                      arquivo pode estar incompleto, e a árvore também.\n\nO aviso usa o sexo \
+                      registrado na árvore. Para a mãe (sexo feminino), marca idade fora de \
+                      12 a 55 anos no nascimento do filho ou nascimento depois da morte dela. \
+                      Para o pai ou quando falta o sexo, marca idade fora de 12 a 80 anos ou \
+                      nascimento mais de um ano depois da morte. A conta usa o mês e o dia \
+                      quando as duas datas os têm na forma padrão do FamilySearch; de uma data \
+                      só digitada vale o ano, e um intervalo na forma padrão não conta como \
+                      data. O elo continua no caminho, com a marca para conferir as datas e o \
+                      parentesco. A árvore só indica os caminhos; a prova de cada elo vem dos documentos."
     )]
     Paths {
         #[arg(

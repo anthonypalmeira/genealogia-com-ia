@@ -5,7 +5,7 @@
 
 use std::{collections::HashMap, path::Path};
 
-use gedcomx::{FactType, Person};
+use gedcomx::{FactType, GenderType, Person};
 use serde_json::{Value, json};
 
 use super::{
@@ -60,7 +60,8 @@ pub(super) fn list(config: &Config, file: &Path, targets: &[PersonId]) -> Result
                     Summary::of(&persons, link[0]),
                     Summary::of(&persons, link[1]),
                 );
-                let warnings = dates::impossible_together(child.lifespan(), parent.lifespan());
+                let warnings =
+                    dates::impossible_together(child.lifespan(), parent.lifespan(), parent.gender);
                 let short = [
                     number.to_string(),
                     target.to_string(),
@@ -118,6 +119,7 @@ fn descend<'a>(
 struct Summary<'a> {
     id: &'a PersonId,
     name: Option<&'a str>,
+    gender: Option<&'a GenderType>,
     born: Option<Date>,
     died: Option<Date>,
 }
@@ -129,6 +131,7 @@ impl<'a> Summary<'a> {
         Self {
             id,
             name: name(person),
+            gender: person.gender.as_ref().map(|gender| &gender.gender_type),
             born: Date::of(person, &FactType::Birth),
             died: Date::of(person, &FactType::Death),
         }
