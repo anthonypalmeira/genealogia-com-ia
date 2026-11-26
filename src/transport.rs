@@ -269,6 +269,9 @@ impl<'a> Transport<'a> {
                 Err(error @ Error::BridgeDetached) => return Err(error),
                 Err(error) => {
                     // The request may have reached the server, so it still counts.
+                    if self.unheld.is_none() {
+                        turn.count();
+                    }
                     turn.record(self.config, now_ms()?, millis(started.elapsed()), None)?;
                     return Err(error);
                 }
@@ -302,7 +305,11 @@ impl<'a> Transport<'a> {
             };
             // The count and the pause are saved from the headers alone, before any
             // body is read, so a body that stalls or breaks cannot lose them. The
-            // turn itself goes on while the body is read.
+            // turn itself goes on while the body is read. A session being
+            // checked spends the account's window, not the held session's cap.
+            if self.unheld.is_none() {
+                turn.count();
+            }
             turn.record(self.config, now_ms()?, cost_ms, pause)?;
             match status {
                 200..=299 => {

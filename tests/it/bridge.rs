@@ -311,7 +311,8 @@ fn a_stale_or_missing_session_in_the_tab_keeps_the_held_one() {
         (None, 3),
     ] {
         let fs = knowing(&[TOKEN]);
-        let env = TestEnv::logged_in(&fs);
+        // A refused check spends nothing of the held session's cap.
+        let env = TestEnv::logged_in(&fs).with_var("GARIMPO_TETO_SESSAO", "1");
         let tab = tab_with(&env, &fs, cookie);
 
         let delivered = env.run(&["sessao", "entregar", "--pela-ponte"]);
