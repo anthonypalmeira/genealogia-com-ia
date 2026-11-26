@@ -112,6 +112,8 @@ pub(crate) struct Transport<'a> {
     agent: Agent,
     /// The session of the first request. One command never spans two sessions.
     token: OnceLock<Token>,
+    /// A session to check before it is held: used instead of the held one.
+    unheld: Option<&'a Token>,
 }
 
 impl<'a> Transport<'a> {
@@ -120,6 +122,16 @@ impl<'a> Transport<'a> {
             config,
             agent: agent(),
             token: OnceLock::new(),
+            unheld: None,
+        }
+    }
+
+    /// Requests made with `token`, a session not held yet, to check it. A 401
+    /// leaves the held session alone, since it is not that one.
+    pub(crate) fn with_session(config: &'a Config, token: &'a Token) -> Self {
+        Self {
+            unheld: Some(token),
+            ..Self::new(config)
         }
     }
 
@@ -422,6 +434,9 @@ impl<'a> Transport<'a> {
     /// If that is no longer the session the command started with, it stops: a
     /// check made in one session must not be followed by a write in another.
     fn token(&self) -> Result<&Token, Error> {
+        if let Some(token) = self.unheld {
+            return Ok(token);
+        }
         let current = session::token(&self.config.dir)?;
         match self.token.get() {
             None => Ok(self.token.get_or_init(|| current)),

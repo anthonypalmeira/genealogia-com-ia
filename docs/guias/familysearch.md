@@ -8,7 +8,7 @@ As rotas internas (`/service/…`) mudam sem aviso. Quando uma falhar, registre 
 
 | Item | Regra |
 |---|---|
-| Login | O usuário entra no FamilySearch no navegador dele. Confira com `garimpo sessao conferir`. No teste de 25/11/2026, a aba ainda tinha o cookie `fssessionid` quando o site redirecionou para o login do Google. O agente usa o identificador da sessão válida como `Authorization: Bearer` |
+| Login | O usuário entra no FamilySearch na aba do navegador do agente, e `garimpo sessao entregar --pela-ponte` leva a sessão da aba ao `garimpo` (passos em [Sessão e acesso](leitura-e-operacao.md#sessão-e-acesso)). Confira com `garimpo sessao conferir`. No teste de 25/11/2026, a aba ainda tinha o cookie `fssessionid` quando o site redirecionou para o login do Google. O agente usa o identificador da sessão válida como `Authorization: Bearer` |
 | Token | Fica só em memória: nunca em disco, em linha de comando, em mensagem nem em log |
 | Expiração | A sessão dura menos de um dia. Com 401, peça novo login uma vez e siga com o que não depende dele |
 | Concorrência | Várias conversas na mesma conta somam no mesmo limite: um baixador por conta |

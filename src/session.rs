@@ -25,6 +25,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use crate::{
+    bridge,
     cli::{Config, SessionCommand},
     error::Error,
     pacing::Turn,
@@ -93,7 +94,19 @@ impl CurrentUser {
 /// Runs a command of the `sessao` group.
 pub(crate) fn run(config: &Config, command: &SessionCommand) -> Result<(), Error> {
     match command {
-        SessionCommand::Deliver => {
+        SessionCommand::Deliver {
+            through_bridge: true,
+        } => {
+            let token = bridge::session(&config.dir)?;
+            // Checked with this very token, before it replaces the held one: a
+            // stale cookie leaves the previous session in place.
+            Transport::with_session(config, &token).get("/platform/users/current")?;
+            deliver(config, &token)?;
+            config.print("sessao guardada", &json!({"sessao": "guardada"}))?;
+        }
+        SessionCommand::Deliver {
+            through_bridge: false,
+        } => {
             let mut stdin = io::stdin();
             if stdin.is_terminal() {
                 return Err(Error::Input(

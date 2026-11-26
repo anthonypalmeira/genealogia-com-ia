@@ -64,7 +64,12 @@ Escolher quais documentos e páginas entram num relatório é decisão do autor.
 
 ### Sessão e acesso
 
-- Confira a sessão do FamilySearch antes de um trabalho longo. Se ela faltar, peça o login ao usuário uma vez e siga com o que não depende dele.
+- Confira a sessão do FamilySearch antes de um trabalho longo, com `garimpo sessao conferir`. Se sair com 3, entregue a sessão sem pedir nada no chat:
+  1. Abra `https://www.familysearch.org` no navegador do agente e mostre a aba ao usuário. Se o site pedir login, espere o usuário entrar ali.
+  2. Rode `garimpo ponte abrir` e avalie na aba o trecho que ele imprime.
+  3. Rode `garimpo sessao entregar --pela-ponte`: ele lê a sessão na aba, confere no FamilySearch e só então a guarda. O token não passa pela conversa.
+  4. Confira com `garimpo sessao conferir`. Se a entrega sair com 3, a aba não está logada: volte ao passo 1.
+- Só sem navegador peça o login ao usuário no chat, uma vez, e siga com o que não depende dele.
 - Peça cedo o que só o usuário faz: login, captcha, consulta no navegador dele.
 - O token fica só em memória.
 - Bloqueio (403, 429, captcha) entra na cobertura como pendente de acesso.

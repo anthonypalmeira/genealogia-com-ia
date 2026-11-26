@@ -4,7 +4,7 @@ Os passos com que toda skill do kit começa, antes de qualquer busca.
 
 1. **Regras.** As [regras fixas](../../AGENTS.md#regras-fixas) do kit valem em toda skill: leia-as, se a conversa não as trouxe carregadas. Pronto quando as regras estão no contexto.
 2. **Perfil.** Leia `pesquisa/perfil.md`; sem ele, [monte a pasta](../../modelos/pesquisa/README.md#montar-a-pasta). A pessoa raiz é o ponto de partida quando o pedido não dá outro. O perfil de prova ajusta a régua. O relatório de referência é onde se confere se um achado já está no relatório. O idioma vale para as respostas e para os arquivos salvos. Pronto quando o perfil está lido e não tem campo por preencher.
-3. **Login.** Rode `garimpo sessao conferir` e trate a falta de sessão pela regra de [Sessão e acesso](../guias/leitura-e-operacao.md#sessão-e-acesso). Pronto quando a sessão vale ou o pedido de login está feito.
+3. **Login.** Rode `garimpo sessao conferir` e, se sair com 3, entregue a sessão pela regra de [Sessão e acesso](../guias/leitura-e-operacao.md#sessão-e-acesso). Pronto quando `garimpo sessao conferir` sai com 0, ou quando o agente não tem navegador e o pedido de login está feito.
 4. **Estado.** Ache os elos do pedido em `pesquisa/linhagens.md`; o elo que falta ali, [abra](../../modelos/pesquisa/README.md#abrir-um-elo). Para cada elo, responda às cinco perguntas da retomada:
 
    | Pergunta | Onde está a resposta |
