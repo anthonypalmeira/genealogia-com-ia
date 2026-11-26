@@ -77,7 +77,8 @@ pub(super) fn download(
                     continue;
                 }
                 Ok(Fetched::Pending(reason)) => reason,
-                Err(error @ Error::ImageStorage { .. }) => {
+                // A 429 asks for a pause: it stops the batch like any other block.
+                Err(error @ Error::ImageStorage { status }) if status != 429 => {
                     format!("{error} ao endereço fixo do retrato")
                 }
                 Err(error) => return Err(error),
