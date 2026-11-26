@@ -126,7 +126,7 @@ fn impossible_dates(lineage: &Lineage, link: &Link) -> Vec<String> {
         }
     }
     let (child, parent) = (&lineage.persons[link.from], &lineage.persons[link.to]);
-    dates::impossible_together(lifespan(child), lifespan(parent))
+    dates::impossible_together(lifespan(child), lifespan(parent), None)
 }
 
 /// The direct line: the direct links that follow one another from the

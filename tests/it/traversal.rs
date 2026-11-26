@@ -280,6 +280,7 @@ fn ancestry_with_a_cut_year_climbs_until_somebody_born_before_it() {
 /// A synthetic family in which A reaches T twice: through B, and through C
 /// and D. T has another child, X, who is not an ancestor of A.
 ///
+/// B would be 68 when she gave birth to A.
 /// B was born 11 years and 9 months after T, and C more than a year after D
 /// died: by the years alone, 12 years and the year after, neither would show.
 fn family(request: &Request) -> Reply {
@@ -305,9 +306,11 @@ fn family(request: &Request) -> Reply {
         {"nameForms": [{"fullText": "Pessoa Sintética T"}]},
         {"nameForms": [{"fullText": "Sintética T de Exemplo"}]},
     ]);
+    let mut b = dated("B", json!([fact("Birth", "+1812-03-10")]));
+    b["gender"] = json!({"type": "http://gedcomx.org/Female"});
     let persons = [
         dated("A", json!([fact("Birth", "+1880-05-20")])),
-        dated("B", json!([fact("Birth", "+1812-03-10")])),
+        b,
         dated("C", json!([fact("Birth", "+1849-06-15")])),
         dated(
             "D",
@@ -372,7 +375,12 @@ fn every_path_to_a_target_is_listed_with_the_impossible_dates_marked() {
     assert_eq!(
         paths.stdout.lines().collect::<Vec<_>>(),
         [
-            link("1", a, ["B", b[1], "-"], "-"),
+            link(
+                "1",
+                a,
+                ["B", b[1], "-"],
+                "Pessoa Sintética B teria 68 anos quando Pessoa Sintética A nasceu"
+            ),
             link(
                 "1",
                 b,

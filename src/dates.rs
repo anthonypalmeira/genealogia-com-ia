@@ -2,12 +2,12 @@
 //! dates of a child and of a parent impossible together: one rule for the
 //! tree and for the drawing of a lineage.
 
-use std::{fmt, ops::RangeInclusive};
+use std::fmt;
 
-use gedcomx::{FactType, Person, gedcomx_date::GedcomxDate};
+use gedcomx::{FactType, GenderType, Person, gedcomx_date::GedcomxDate};
 
-/// The youngest and the oldest a parent can plausibly be at a child's birth.
-const PARENT_AGES: RangeInclusive<i64> = 12..=80;
+#[cfg(test)]
+mod tests;
 
 /// A date as precise as it was given: a year, a year and a month, or a day.
 #[derive(Debug, Clone, Copy)]
@@ -109,21 +109,28 @@ pub(crate) struct Lifespan<'a> {
 /// What makes the dates of a child and of a parent impossible together, at
 /// the precision both dates have.
 #[must_use = "the breaks are only useful when shown"]
-pub(crate) fn impossible_together(child: Lifespan<'_>, parent: Lifespan<'_>) -> Vec<String> {
+pub(crate) fn impossible_together(
+    child: Lifespan<'_>,
+    parent: Lifespan<'_>,
+    parent_gender: Option<&GenderType>,
+) -> Vec<String> {
+    let (oldest, years_after_death) = match parent_gender {
+        Some(GenderType::Female) => (55, 0),
+        _ => (80, 1),
+    };
     let mut broken = Vec::new();
     if let (Some(child_born), Some(parent_born)) = (child.born, parent.born) {
         let age = parent_born.years_until(child_born);
-        if !PARENT_AGES.contains(&age) {
+        if !(12..=oldest).contains(&age) {
             broken.push(format!(
                 "{} teria {age} anos quando {} nasceu",
                 parent.name, child.name
             ));
         }
     }
-    // A father can die up to a year before the birth.
     if let (Some(child_born), Some(parent_died)) = (child.born, parent.died) {
         let [year, month, day] = parent_died.at_precision_of(child_born);
-        if child_born.at_precision_of(parent_died) > [year + 1, month, day] {
+        if child_born.at_precision_of(parent_died) > [year + years_after_death, month, day] {
             broken.push(format!(
                 "{} nasceu depois da morte de {}",
                 child.name, parent.name
