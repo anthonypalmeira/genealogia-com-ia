@@ -48,7 +48,7 @@ Diz se a pessoa de partida chega a algum ancestral-alvo e por onde. A árvore s�
      garimpo imagens folha <retratos, em ordem> --saida pesquisa/varreduras/folha-retratos-<n>.jpg
      ```
 
-     Ache nas folhas os retratos com o selo e confirme cada um no retrato original. Quem tem o selo segue como lista, pelo ID. `fs retratos` interrompido por login, bloqueio ou teto deixa o critério pendente de acesso, como a varredura; quem ele dá como pendente de acesso entra nos ramos por verificar.
+     Procure o selo nas folhas e confira cada candidato na miniatura baixada. Se o selo não se lê nela, abra a memória de origem do retrato. Quem tem o selo segue como lista, pelo ID. `fs retratos` interrompido por login, bloqueio ou teto deixa o critério pendente de acesso, como a varredura; quem ele dá como pendente de acesso entra nos ramos por verificar.
 
    Pronto quando cada alvo da lista está como achado (com o ID), candidato ou "não aparece na árvore até o limite", e o critério passou por todas as pessoas dentro do limite.
 5. **Liste os caminhos**, com as datas impossíveis marcadas:

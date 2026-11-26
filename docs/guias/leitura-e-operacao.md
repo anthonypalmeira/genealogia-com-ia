@@ -41,16 +41,7 @@ Pouca resolução na triagem não é motivo para parar: baixe o original. Um ass
 
 ### Delegar a leitura
 
-1. Baixe as páginas, dentro do teto da sessão, e deduplique por hash: galerias e microfilmes repetem páginas.
-2. Leia a capa e o fim (há índice?). Amostre algumas imagens, date pelos cabeçalhos e interpole.
-3. Divida em faixas sem sobreposição, um subagente por faixa.
-4. O briefing leva: o layout do documento, a faixa, a lista dos alvos com as grafias, as palavras de parentesco, o que já foi lido e o formato de entrega. Cada fato do briefing traz a fonte, e o subagente o trata como hipótese.
-5. O subagente devolve texto, não imagens: um resultado por página (lido, ilegível ou sem alvo), e cada achado com o número da imagem e o trecho.
-6. A conversa principal confere na imagem cada achado que vai usar.
-
-Pronto quando toda página da faixa tem resultado e há uma lista de ilegíveis.
-
-Para varrer uma lista, o leitor recebe os alvos. Para a palavra decisiva, lê às cegas (passo 7).
+Para repartir as páginas, preparar o briefing e conferir os achados, siga a skill [ler-acervo](../../skills/ler-acervo/SKILL.md).
 
 ### A imagem continua sendo o documento
 
@@ -101,7 +92,7 @@ Nada fica só no chat, no navegador ou em `/tmp`: achado, explicação e próxim
 
 - A primeira palavra responde à pergunta: "Sim" ou "Não", quando couber.
 - Nomes completos, com o parentesco de cada pessoa citada. Sem códigos como "elo 12" ou "V2".
-- Cada achado diz que elo prova ("X é filho de Y"), a nota antes e depois, e se já está no relatório do usuário.
+- Apresente cada achado pelo passo **Achados** do [fechamento comum](../skills/fechamento.md).
 - Diga o tipo do achado na primeira linha: imagem lida, menção, índice ou "onde estaria".
 - Separe o novo do que já se sabia.
 - Entregue no formato do destino: texto puro para e-mail, até 7 linhas para WhatsApp, uma página para carta.

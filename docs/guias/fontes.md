@@ -121,9 +121,9 @@ Pronto quando o documento tem estado, referência e a lista das bases conferidas
 
 - **Curto.** Um parágrafo e uma lista numerada com o que o arquivo precisa para achar: cota ou códice, livro, ano, folha, nomes e o motivo em uma linha.
 - **No formato do canal.** E-mail em texto puro; carta em PDF de uma página; mensagem de WhatsApp com até 7 linhas.
-- **Para cartório.** Tire cada limite do período de um documento: o registro civil começa em 1889, a idade mínima para casar, cerca de 100 anos de vida. Confira na imagem as datas que fixam os limites. Feche os intervalos em múltiplos de 5 anos, ponha o preço por item e o total, e destaque o subconjunto de melhor custo.
+- **Para cartório.** Tire cada limite do período de um documento: o registro civil começa em 1889, a idade mínima para casar, cerca de 100 anos de vida. Confira na imagem as datas que fixam os limites. Feche os intervalos em múltiplos de 5 anos.
 - **Peça "inteiro teor"**: o extrato é derivado.
 - **Dados pessoais** entram só como campos a preencher pelo usuário.
 - **Para um genealogista contratado**: liste o que já temos, os homônimos descartados e o que cada item provaria.
-- **Envio.** Deixe como rascunho. Envie só com ordem explícita do usuário e com o texto mostrado antes.
-- **Registro.** Anote cada pedido com a situação: rascunho, enviado, respondido, cumprido.
+
+Para calcular o preço, preparar o rascunho e acompanhar a resposta, siga a skill [pedido](../../skills/pedido/SKILL.md).
