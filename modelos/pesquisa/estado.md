@@ -20,7 +20,7 @@ identidade: ∅
 
 ## Decisão do pesquisador
 
-<"Nenhuma", ou: filiação ou identidade, a nota da régua, a nota decidida, o motivo e a data.>
+<"Nenhuma", ou: filiação ou identidade, a nota da régua, a nota decidida, o motivo e a data. Para decisão anterior ao kit, indique onde foi registrada.>
 
 ## Conversas abertas
 
